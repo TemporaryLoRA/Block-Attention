@@ -1,9 +1,19 @@
-
 # BLOCK-ATTENTION FOR EFFICIENT RAG
 
 This is the repository for the [BLOCK-ATTENTION FOR EFFICIENT RAG](https://arxiv.org/abs/2409.15355).
 
-We introduce Block-Attention, an attention mechanism designed to address the increased inference latency and cost in Retrieval-Augmented Generation (RAG) scenarios. Unlike existing works that encodes the whole context, its main idea lies in dividing the retrieved documents into blocks, where each block calculates key-value (KV) states independently except for the final block. In RAG scenarios, by defining each passage as a block, Block-Attention enables us to pre-compute the KV states for all passages and cache them in memory, significantly reducing the latency and the computation cost during inference. The implementation involves block segmentation, positional encoding calculation, and fine-tuning the LLM to adapt to the Block-Attention mechanism. Experiments on four RAG benchmarks demonstrate that after block fine-tuning, the Block Attention model can achieve performance comparable to (68.4\% vs 67.9\% on Llama3) or even better (62.8\% vs 59.6\% on Mistral) than self-attention models. Notably, Block-Attention reduces the TTFT (the time to first token) and FLOPs (floating point operations) to a very low level. It only takes 45 ms to output the first token for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively. 
+We introduce Block-Attention, an attention mechanism designed to address the increased inference latency and cost in
+Retrieval-Augmented Generation (RAG) scenarios. Unlike existing works that encodes the whole context, its main idea lies
+in dividing the retrieved documents into blocks, where each block calculates key-value (KV) states independently except
+for the final block. In RAG scenarios, by defining each passage as a block, Block-Attention enables us to pre-compute
+the KV states for all passages and cache them in memory, significantly reducing the latency and the computation cost
+during inference. The implementation involves block segmentation, positional encoding calculation, and fine-tuning the
+LLM to adapt to the Block-Attention mechanism. Experiments on four RAG benchmarks demonstrate that after block
+fine-tuning, the Block Attention model can achieve performance comparable to (68.4\% vs 67.9\% on Llama3) or even
+better (62.8\% vs 59.6\% on Mistral) than self-attention models. Notably, Block-Attention reduces the TTFT (the time to
+first token) and FLOPs (floating point operations) to a very low level. It only takes 45 ms to output the first token
+for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
+corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
 ## Running
 
@@ -20,3 +30,52 @@ python3 data_process/2wiki.py --train_fp <the path of 2wiki train dataset> --eva
 ```bash
 python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field>
 ```
+
+## DataProcess
+
+### 数据下载
+
+请分别执行以下文件，下载数据
+
+|      数据集      |                                                                    下载脚本                                                                    |
+|:-------------:|:------------------------------------------------------------------------------------------------------------------------------------------:|
+| 2WikiMultiHop |                                           https://huggingface.co/datasets/xanhho/2WikiMultihopQA                                           |
+|    NQ, TQA    | https://github.com/facebookresearch/FiD/blob/main/get-data.sh; https://github.com/facebookresearch/DPR/blob/main/dpr/data/download_data.py |
+|      HQA      |                                         https://github.com/hotpotqa/hotpot/blob/master/download.sh                                         |
+
+### 数据预处理
+
+`2WikiMultiHop`和`HQA`不需要处理，`HQA`选择下载下来的`hotpot_dev_distractor_v1.json`文件。
+
+`NQ`和`TQA`在执行`get-data.sh`后，会调用`FiD`仓库的`preprocess.py`文件，生成处理之后的数据文件。
+
+`DPR`仓库提供了`NQ`数据集的Golden Document(即能够回答的问题的段落片段)，没有实际用到，可以忽略不计。
+
+### 训练、测试数据集构建
+
+1. 下载retrieval模型
+
+- facebook/contriever-msmacro：https://huggingface.co/facebook/contriever-msmarco
+
+1. 分别执行以下文件
+
+```bash 
+python3 data_process/hqa.py --eval_fp <> --output_dir <>
+
+python3 data_process/nq.py --eval_fp <> --output_dir <>
+
+python3 data_process/tqa.py --eval_fp <> --train_fp <> --output_dir <>
+
+python3 data_process/2wiki.py --eval_fp <> --train_fp <> --output_dir <>
+```
+
+2. 构建训练集
+
+经过步骤 1 各数据集的测试数据极影完成，还要额外处理一下。
+
+1. 执行`data_process/random_sample.py`，从`2wiki`和`tqa`的训练数据中随机sample 20,000条数据组建各自的训练集
+2. 执行`data_process/merge.py`，将步骤 1 得到的两个训练文件合并 ，得到最终的训练数据集
+
+
+
+

@@ -1,9 +1,7 @@
 import json
 import argparse
-from idlelib.iomenu import encoding
 
 import torch
-from lxml.html.diff import token
 from torch.nn import functional as F
 
 from tqdm import tqdm
@@ -30,9 +28,6 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
     "generated": str,
     "inputs": SFTDataInstanceInputs
 })
-
-
-
 
 
 def pkv_to_device(pkv: DynamicCache, device: Union[torch.device, str]) -> DynamicCache:

@@ -26,7 +26,7 @@ deepspeed --num_gpus 8 trainer.py \
   --max_grad_norm 1.0 \
   --weight_decay 0.0 \
   --lr_scheduler_type "constant_with_warmup" \
-  --evaluation_strategy "step2" \
+  --evaluation_strategy "steps" \
   --optim "adamw_torch" \
   --eval_steps 50 \
   --warmup_steps 20 \

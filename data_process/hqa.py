@@ -6,6 +6,8 @@ import argparse
 import torch
 import random
 
+import pandas as pd
+
 from tqdm import tqdm
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Union, TypedDict
@@ -31,7 +33,6 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
 
 @dataclass
 class BuildArgs:
-    train_fp: str
     eval_fp: str
     output_dir: str
 
@@ -100,14 +101,14 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
 
 
 def process_file(input_file: str, output_file: str, num_samples: int):
-    with open(input_file, "r", encoding="utf-8") as f:
-        wiki_instances: List[Dict[str, Any]] = [json.loads(i) for i in f]
+    df = pd.read_parquet(path=input_file)
+    hqa_instances: List[Dict[str, Any]] = df.to_dict(orient="records")
     if num_samples != -1:
-        wiki_instances = random.sample(population=wiki_instances, k=num_samples)
+        hqa_instances = random.sample(population=hqa_instances, k=num_samples)
 
     dataset: List[SFTDataInstance] = []
-    for i in tqdm(range(0, len(wiki_instances)), desc="Process 2wiki: ", total=len(wiki_instances)):
-        ins = process_instance(ins=wiki_instances[i])
+    for i in tqdm(range(0, len(hqa_instances)), desc="Process HQA: ", total=len(hqa_instances)):
+        ins = process_instance(ins=hqa_instances[i])
         ins = tokenizer_instance(ins=ins)
         dataset.append(ins)
 
@@ -118,19 +119,15 @@ def process_file(input_file: str, output_file: str, num_samples: int):
 
 def parse_args() -> BuildArgs:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_fp", type=str)
     parser.add_argument("--eval_fp", type=str)
     parser.add_argument("--output_dir", type=str)
     args = parser.parse_args()
-    return BuildArgs(
-        train_fp=args.train_fp, eval_fp=args.eval_fp, output_dir=args.output_dir
-    )
+    return BuildArgs(eval_fp=args.eval_fp, output_dir=args.output_dir)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_train')}")
-    os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_eval')}")
+    os.system(f"mkdir -p {os.path.join(args.output_dir, 'hqa_eval')}")
 
     random.seed(42)
     model_name = "contriever-msmacro"
@@ -141,8 +138,5 @@ if __name__ == '__main__':
         device_map="cuda:0"
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=50000
-    )
-    process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
+        input_file=args.eval_fp, output_file=os.path.join(args.output_dir, "hqa_eval", "dataset"), num_samples=-1
     )

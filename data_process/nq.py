@@ -31,7 +31,6 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
 
 @dataclass
 class BuildArgs:
-    train_fp: str
     eval_fp: str
     output_dir: str
 
@@ -53,7 +52,7 @@ def compute_embeddings(sentences: List[str], model: PreTrainedModel, tokenizer: 
 
 
 def process_instance(ins: Dict[str, Any]) -> SFTDataInstance:
-    documents = [Document(title=i[0], text=''.join(i[1]), score=0.0) for i in ins["context"]]
+    documents = [Document(title=i['title'], text=i['text'], score=0.0) for i in ins['ctxs']]
     embeddings = compute_embeddings(
         sentences=[ins['question']] + [i['text'] for i in documents], model=model, tokenizer=tokenizer
     )
@@ -118,19 +117,15 @@ def process_file(input_file: str, output_file: str, num_samples: int):
 
 def parse_args() -> BuildArgs:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train_fp", type=str)
     parser.add_argument("--eval_fp", type=str)
     parser.add_argument("--output_dir", type=str)
     args = parser.parse_args()
-    return BuildArgs(
-        train_fp=args.train_fp, eval_fp=args.eval_fp, output_dir=args.output_dir
-    )
+    return BuildArgs(eval_fp=args.eval_fp, output_dir=args.output_dir)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_train')}")
-    os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_eval')}")
+    os.system(f"mkdir -p {os.path.join(args.output_dir, 'nq_eval')}")
 
     random.seed(42)
     model_name = "contriever-msmacro"
@@ -141,8 +136,5 @@ if __name__ == '__main__':
         device_map="cuda:0"
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=50000
-    )
-    process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
+        input_file=args.eval_fp, output_file=os.path.join(args.output_dir, "nq_eval", "dataset"), num_samples=-1
     )

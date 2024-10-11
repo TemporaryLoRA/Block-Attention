@@ -53,7 +53,7 @@ def compute_embeddings(sentences: List[str], model: PreTrainedModel, tokenizer: 
 
 
 def process_instance(ins: Dict[str, Any]) -> SFTDataInstance:
-    documents = [Document(title=i[0], text=''.join(i[1]), score=0.0) for i in ins["context"]]
+    documents = [Document(title=i['title'], text=i['text'], score=0.0) for i in ins["ctxs"]]
     embeddings = compute_embeddings(
         sentences=[ins['question']] + [i['text'] for i in documents], model=model, tokenizer=tokenizer
     )
@@ -69,7 +69,7 @@ def process_instance(ins: Dict[str, Any]) -> SFTDataInstance:
     return SFTDataInstance(
         prompt="",
         question=ins['question'],
-        answers=[ins['answer']],
+        answers=ins['answers'],
         generated='',
         inputs=SFTDataInstanceInputs(input_ids=[], labels=[]),
         documents=documents[:10]
@@ -129,8 +129,8 @@ def parse_args() -> BuildArgs:
 
 if __name__ == '__main__':
     args = parse_args()
-    os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_train')}")
-    os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_eval')}")
+    os.system(f"mkdir -p {os.path.join(args.output_dir, 'tqa_train')}")
+    os.system(f"mkdir -p {os.path.join(args.output_dir, 'tqa_eval')}")
 
     random.seed(42)
     model_name = "contriever-msmacro"
@@ -141,8 +141,8 @@ if __name__ == '__main__':
         device_map="cuda:0"
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=50000
+        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "tqa_train", "dataset"), num_samples=-1
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
+        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "tqa_eval", "dataset"), num_samples=-1
     )
