@@ -15,20 +15,18 @@ first token) and FLOPs (floating point operations) to a very low level. It only 
 for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
 corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-## Running
+## Docker 构建
 
-1. Use the `data_process/2wiki.py` script to generate the dataset.
-
-```bash 
-python3 data_process/2wiki.py --train_fp <the path of 2wiki train dataset> --eval_fp <the path of 2wiki dev dataset> --output_dir <the path of output dir>
-```
-
-2. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
-
-3. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
+1. Dockerfile依赖nvidia镜像`nvidia/cuda:11.8.0-devel-ubuntu22.04`，需要先执行命令：
 
 ```bash
-python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field>
+docker pull nvidia/cuda:11.8.0-devel-ubuntu22.04
+```
+
+2. 在Block-Attention项目文件夹内部执行
+
+```bash
+docker build -t block_attention:latest . 
 ```
 
 ## DataProcess
@@ -42,6 +40,15 @@ python3 block_generate.py --model_name <the path of block model> --input_file <a
 | 2WikiMultiHop |                                           https://huggingface.co/datasets/xanhho/2WikiMultihopQA                                           |
 |    NQ, TQA    | https://github.com/facebookresearch/FiD/blob/main/get-data.sh; https://github.com/facebookresearch/DPR/blob/main/dpr/data/download_data.py |
 |      HQA      |                                         https://github.com/hotpotqa/hotpot/blob/master/download.sh                                         |
+
+**注：**2WikiMultiHop可以采用如下的命令下载
+
+```bash
+mkdir datahub
+cd datahub
+git lfs install 
+git clone https://huggingface.co/datasets/xanhho/2WikiMultihopQA
+```
 
 ### 数据预处理
 
@@ -77,5 +84,13 @@ python3 data_process/2wiki.py --eval_fp <> --train_fp <> --output_dir <>
 2. 执行`data_process/merge.py`，将步骤 1 得到的两个训练文件合并 ，得到最终的训练数据集
 
 
+## Running
 
+1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
+
+2. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
+
+```bash
+python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field>
+```
 
