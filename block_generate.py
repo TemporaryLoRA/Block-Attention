@@ -140,7 +140,7 @@ def build_block_past_key_values(
 
     assert instruction_ans_response.startswith(
         "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n"
-        "Please write a high-quality answer for the given question using only the provided search documents"
+        "Please write a high-quantify answer for the given question using only the provided search documents"
     )
     blocks = [b for b in blocks if b != ""]
 
