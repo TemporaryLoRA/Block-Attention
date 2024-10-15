@@ -129,8 +129,35 @@ python3 data_process/random_sample.py --input cache/tqa_train/dataset --output c
 
 2. 执行`data_process/merge.py`，将步骤 1 得到的两个训练文件合并 ，得到最终的训练数据集
 
+
 ```bash 
 python3 data_process/merge.py --inputs "cache/2wiki_train/dataset_p20k cache/tqa_train/dataset_p20k" --output cache/tqa_2wiki_p20k
+```
+
+3. 使用ChatGPT获取补全`generated`字段以用作训练。
+
+经过第 2 步处理完之后，`tqa_2wiki_p20k`每行的数据结构如下，根据prompt请求ChatGPT，根据获取的结果补全`generated`字段即可。
+
+注意，prompt中的一些特殊token，如`<|begin_of_text|>`等在调用ChatGPT时需要处理一下。
+
+```python
+from typing import TypedDict, List
+
+Document = TypedDict("Document", {"title": str, "text": str, "score": float})
+
+SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
+    "input_ids": List[int],
+    "labels": List[int]
+})
+
+SFTDataInstance = TypedDict("SFTDataInstance", {
+    "prompt": str,
+    "question": str,
+    "answers": List[str],
+    "generated": str,
+    "inputs": SFTDataInstanceInputs,
+    "documents": List[Document]
+})
 ```
 
 ## Running
