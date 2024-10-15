@@ -255,5 +255,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-    from transformers.models.llama.modeling_llama import LlamaForCausalLM
+    from transformers.training_args import TrainingArguments

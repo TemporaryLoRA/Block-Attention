@@ -63,7 +63,8 @@ if __name__ == '__main__':
         trust_remote_code=False,
         use_cache=False,
         torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2" if data_args.train_method == "sft" else "sdpa"
+        attn_implementation="flash_attention_2" if data_args.train_method == "sft" else "sdpa",
+        device_map="auto"
     )
 
     with train_args.main_process_first(desc="Load dataset: ", local=True):

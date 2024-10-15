@@ -31,7 +31,6 @@ deepspeed --num_gpus 8 trainer.py \
   --eval_steps 50 \
   --warmup_steps 20 \
   --num_train_epochs 1 \
-  --save_epochs 1 \
   --bf16 \
   --gradient_checkpointing \
   --output_dir $SAVE_DIR \

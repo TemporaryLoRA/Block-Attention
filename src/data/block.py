@@ -57,7 +57,7 @@ def make_block_attention_for_llama3(ins: SFTDataInstance, tokenizer: PreTrainedT
 
     assert blocks[-1].startswith(
         "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n"
-        "Please write a high-quality answer for the given question using only the provided search documents"
+        "Please write a high-quantify answer for the given question using only the provided search documents"
     )
     blocks = [b for b in blocks if b != ""]
 
@@ -108,7 +108,7 @@ class BlockAttentionRawDataset:
 
 class BlockAttentionDataset(Dataset):
     def __init__(self, dataset: BlockAttentionRawDataset, train_prompt: bool):
-        super.__init__()
+        super().__init__()
         self.dataset = dataset
         self.gc_counter = 0
         self.train_prompt = train_prompt
