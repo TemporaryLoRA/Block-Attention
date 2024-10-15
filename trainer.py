@@ -5,6 +5,7 @@ sys.path.append(".")
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torch.utils.data import Dataset
 
 from transformers.modeling_outputs import CausalLMOutputWithPast
@@ -42,7 +43,7 @@ def _collator(features: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def data_collator(features: List[Dict[str, Any]], return_tensors: Optional[bool] = False) -> Dict[str, Any]:
-    if len(features) == 0:
+    if len(features) == 1:
         return features[0]
     return _collator(features=features)
 
