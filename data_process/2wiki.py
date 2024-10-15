@@ -5,6 +5,7 @@ import argparse
 
 import torch
 import random
+import pandas as pd
 
 from tqdm import tqdm
 from dataclasses import dataclass, field
@@ -100,8 +101,8 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
 
 
 def process_file(input_file: str, output_file: str, num_samples: int):
-    with open(input_file, "r", encoding="utf-8") as f:
-        wiki_instances: List[Dict[str, Any]] = [json.loads(i) for i in f]
+    df = pd.read_parquet(path=input_file)
+    wiki_instances: List[Dict[str, Any]] = df.to_dict(orient="records")
     if num_samples != -1:
         wiki_instances = random.sample(population=wiki_instances, k=num_samples)
 
@@ -141,8 +142,8 @@ if __name__ == '__main__':
         device_map="cuda:0"
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=50000
+        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=-1
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
+        input_file=args.eval_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
     )

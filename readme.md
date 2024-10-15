@@ -33,21 +33,52 @@ docker build -t block_attention:latest .
 
 ### 数据下载
 
-请分别执行以下文件，下载数据
+论文所用数据的原始来源见：
 
-|      数据集      |                                                                    下载脚本                                                                    |
+|      数据集      |                                                                     来源                                                                     |
 |:-------------:|:------------------------------------------------------------------------------------------------------------------------------------------:|
 | 2WikiMultiHop |                                           https://huggingface.co/datasets/xanhho/2WikiMultihopQA                                           |
 |    NQ, TQA    | https://github.com/facebookresearch/FiD/blob/main/get-data.sh; https://github.com/facebookresearch/DPR/blob/main/dpr/data/download_data.py |
 |      HQA      |                                         https://github.com/hotpotqa/hotpot/blob/master/download.sh                                         |
 
-**注：**2WikiMultiHop可以采用如下的命令下载
+**注：**可分别执行以下命令下载文件
+
+首先在`Block-Attention`下创建各个数据集对应的存储路径。
 
 ```bash
-mkdir datahub
-cd datahub
+mkdir -p datahub/tqa
+mkdir -p datahub/2wiki
+mkdir -p datahub/nq
+mkdir -p datahub/hqa
+```
+
+- 2WikiMultiHop
+
+```bash
+cd Block-Attention/datahub
 git lfs install 
 git clone https://huggingface.co/datasets/xanhho/2WikiMultihopQA
+ln -s 2WikiMultihopQA 2wiki
+```
+
+- NQ、TQA
+
+```bash 
+cd Block-Attention/datahub 
+git clone https://github.com/facebookresearch/FiD
+
+cd FiD
+bash get-data.sh 
+
+```
+
+- HQA
+
+```bash
+cd Block-Attention/datahub
+mkdir -p hqa
+cd hqa 
+wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 ```
 
 ### 数据预处理
@@ -64,16 +95,19 @@ git clone https://huggingface.co/datasets/xanhho/2WikiMultihopQA
 
 - facebook/contriever-msmacro：https://huggingface.co/facebook/contriever-msmarco
 
-1. 分别执行以下文件
+1. 分别执行以下命令
 
 ```bash 
-python3 data_process/hqa.py --eval_fp <> --output_dir <>
 
-python3 data_process/nq.py --eval_fp <> --output_dir <>
+mkdir -p cache
 
-python3 data_process/tqa.py --eval_fp <> --train_fp <> --output_dir <>
+python3 data_process/hqa.py --eval_fp datahub/hqa/hotpot_dev_distractor_v1.json --output_dir cache
 
-python3 data_process/2wiki.py --eval_fp <> --train_fp <> --output_dir <>
+python3 data_process/nq.py --eval_fp <> --output_dir cache
+
+python3 data_process/tqa.py --eval_fp <> --train_fp <> --output_dir cache
+
+python3 data_process/2wiki.py --eval_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir cache
 ```
 
 2. 构建训练集
