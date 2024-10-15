@@ -121,16 +121,32 @@ python3 data_process/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp data
 经过步骤 1 各数据集的测试数据极影完成，还要额外处理一下。
 
 1. 执行`data_process/random_sample.py`，从`2wiki`和`tqa`的训练数据中随机sample 20,000条数据组建各自的训练集
+
+```bash
+python3 data_process/random_sample.py --input cache/2wiki_train/dataset --output cache/2wiki_train/dataset_p20k --num_samples 20000
+python3 data_process/random_sample.py --input cache/tqa_train/dataset --output cache/tqa_train/dataset_p20k --num_samples 20000
+```
+
 2. 执行`data_process/merge.py`，将步骤 1 得到的两个训练文件合并 ，得到最终的训练数据集
 
+```bash 
+python3 data_process/merge.py --inputs "cache/2wiki_train/dataset_p20k cache/tqa_train/dataset_p20k" --output cache/tqa_2wiki_p20k
+```
 
 ## Running
 
-1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
+1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode. And you need to define the following environment variables in the file:
 
-2. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
+- `PROJECT_DIR`: Absolute path of the `Block-Attention` project
+- `TRAIN_FP`: Training data file, for example `cache/tqa_2wiki_p20k`
+- `EVAL_FP`: Test data file, with the same format as `TRAIN_FP`
+- `SAVE_DIR`: Model saving path
+
+## Inference
+
+1. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
 
 ```bash
-python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field>
+python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
 ```
 
