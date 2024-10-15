@@ -44,7 +44,7 @@ def rotate_half(x):
     """
     x1 = x[..., : x.shape[-1] // 2]
     x2 = x[..., x.shape[-1] // 2:]
-    return torch.cat((-x2, x1), dim=-1)
+    return torch.cat(tensors=(-x2, x1), dim=-1)
 
 
 def apply_rotary_pos_emb(k, cos, sin, position_ids, unsqueeze_dim=1):
@@ -69,20 +69,21 @@ def apply_rotary_pos_emb(k, cos, sin, position_ids, unsqueeze_dim=1):
     Returns:
         `tuple(torch.Tensor)` comprising of the query and key tensors rotated using the Rotary Position Embedding.
     """
-    cos = cos[position_ids].unsqueeze(unsqueeze_dim)
-    sin = sin[position_ids].unsqueeze(unsqueeze_dim)
+    cos = cos.unsqueeze(unsqueeze_dim)
+    sin = sin.unsqueeze(unsqueeze_dim)
+    # q_embed = (q * cos) + (rotate_half(q) * sin)
     k_embed = (k * cos) + (rotate_half(k) * sin)
-    return k_embed
-
+    return k_embed.to(dtype=torch.bfloat16)
 
 def apply_pkv_rotary_position_embeddings(pkv: DynamicCache, emb: LlamaRotaryEmbedding) -> DynamicCache:
     device = pkv.key_cache[0].device
+    emb.to(device=device)
     position_ids = torch.arange(start=0, end=pkv.key_cache[0].size(-2), dtype=torch.int64, device=device)
     position_ids = position_ids.unsqueeze(dim=0).repeat(repeats=[pkv.key_cache[0].size(0), 1])
     cos, sin = emb(x=pkv.key_cache[0].to(dtype=torch.float32), position_ids=position_ids)
     for i in range(0, len(pkv.key_cache)):
         pkv.key_cache[i] = apply_rotary_pos_emb(
-            k=pkv.key_cache[i], cos=cos, sin=sin, position_ids=position_ids, unsqueeze_dim=-1
+            k=pkv.key_cache[i].to(dtype=torch.float32), cos=cos, sin=sin, position_ids=position_ids
         )
     return pkv
 
@@ -105,10 +106,11 @@ def merge_and_rotary_past_key_values(pkvs: List[DynamicCache], emb: LlamaRotaryE
     for l_idx in range(0, len(cache)):
         cache.key_cache[l_idx] = torch.cat(
             tensors=[cache.key_cache[l_idx]] + [pkvs[b_idx].key_cache[l_idx] for b_idx in range(1, len(pkvs))],
-            dim=-1
+            dim=-2
         )
         cache.value_cache[l_idx] = torch.cat(
-            tensors=[cache.value_cache[l_idx]] + [pkvs[b_idx].value_cache[l_idx] for b_idx in range(1, len(pkvs))]
+            tensors=[cache.value_cache[l_idx]] + [pkvs[b_idx].value_cache[l_idx] for b_idx in range(1, len(pkvs))],
+            dim=-2
         )
     cache = apply_pkv_rotary_position_embeddings(pkv=cache, emb=emb)
     return cache
@@ -253,3 +255,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+    from transformers.models.llama.modeling_llama import LlamaForCausalLM
