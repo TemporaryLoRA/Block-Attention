@@ -101,45 +101,45 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 
 3. Construct Train Set
 
-After completing the test data projection for each dataset in step 1, additional processing is still required.
-
-1. Execute `data_process/random_sample.py` to randomly sample 20,000 data points from the training data of `2wiki` and `tqa` to create their respective training sets.
-
-    ```bash
-    python3 data_process/random_sample.py --input cache/2wiki_train/dataset --output cache/2wiki_train/dataset_p20k --num_samples 20000
-    python3 data_process/random_sample.py --input cache/tqa_train/dataset --output cache/tqa_train/dataset_p20k --num_samples 20000
-    ```
-
-2. Execute `data_process/merge.py` to combine the two training files obtained in step 1, resulting in the final training dataset.
-
-    ```bash 
-    python3 data_process/merge.py --inputs "cache/2wiki_train/dataset_p20k cache/tqa_train/dataset_p20k" --output cache/tqa_2wiki_p20k
-    ```
-
-3. Use ChatGPT to complete the `generated` field for training purposes.
-   
-    After processing in step 2, the data structure for each line in `tqa_2wiki_p20k` is as follows. Request ChatGPT based on the prompt, and complete the `generated` field with the obtained results.
-    Note that some special tokens in the prompt, such as `<|begin_of_text|>`, need to be processed when calling ChatGPT.
+    After completing the test data projection for each dataset in step 1, additional processing is still required.
     
-    ```python
-    from typing import TypedDict, List
+    1. Execute `data_process/random_sample.py` to randomly sample 20,000 data points from the training data of `2wiki` and `tqa` to create their respective training sets.
     
-    Document = TypedDict("Document", {"title": str, "text": str, "score": float})
+        ```bash
+        python3 data_process/random_sample.py --input cache/2wiki_train/dataset --output cache/2wiki_train/dataset_p20k --num_samples 20000
+        python3 data_process/random_sample.py --input cache/tqa_train/dataset --output cache/tqa_train/dataset_p20k --num_samples 20000
+        ```
     
-    SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
-        "input_ids": List[int],
-        "labels": List[int]
-    })
+    2. Execute `data_process/merge.py` to combine the two training files obtained in step 1, resulting in the final training dataset.
     
-    SFTDataInstance = TypedDict("SFTDataInstance", {
-        "prompt": str,
-        "question": str,
-        "answers": List[str],
-        "generated": str,
-        "inputs": SFTDataInstanceInputs,
-        "documents": List[Document]
-    })
-    ```
+        ```bash 
+        python3 data_process/merge.py --inputs "cache/2wiki_train/dataset_p20k cache/tqa_train/dataset_p20k" --output cache/tqa_2wiki_p20k
+        ```
+    
+    3. Use ChatGPT to complete the `generated` field for training purposes.
+       
+        After processing in step 2, the data structure for each line in `tqa_2wiki_p20k` is as follows. Request ChatGPT based on the prompt, and complete the `generated` field with the obtained results.
+        Note that some special tokens in the prompt, such as `<|begin_of_text|>`, need to be processed when calling ChatGPT.
+        
+        ```python
+        from typing import TypedDict, List
+        
+        Document = TypedDict("Document", {"title": str, "text": str, "score": float})
+        
+        SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
+            "input_ids": List[int],
+            "labels": List[int]
+        })
+        
+        SFTDataInstance = TypedDict("SFTDataInstance", {
+            "prompt": str,
+            "question": str,
+            "answers": List[str],
+            "generated": str,
+            "inputs": SFTDataInstanceInputs,
+            "documents": List[Document]
+        })
+        ```
 
 ## Running
 
