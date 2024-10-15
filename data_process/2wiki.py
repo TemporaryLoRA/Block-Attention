@@ -33,12 +33,12 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
 @dataclass
 class BuildArgs:
     train_fp: str
-    eval_fp: str
+    dev_fp: str
     output_dir: str
 
 
 def mean_pooling(token_embeddings: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
-    token_embeddings = token_embeddings.masked_fill_(-mask[..., None].bool(), 0.0)
+    token_embeddings = token_embeddings.masked_fill_(~mask[..., None].bool(), 0.0)
     sentence_embeddings = token_embeddings.sum(dim=1) / mask.sum(dim=1)[..., None]
     return sentence_embeddings
 
@@ -54,9 +54,12 @@ def compute_embeddings(sentences: List[str], model: PreTrainedModel, tokenizer: 
 
 
 def process_instance(ins: Dict[str, Any]) -> SFTDataInstance:
+    if isinstance(ins['context'], str):
+        ins['context'] = json.loads(ins['context'])
+
     documents = [Document(title=i[0], text=''.join(i[1]), score=0.0) for i in ins["context"]]
     embeddings = compute_embeddings(
-        sentences=[ins['question']] + [i['text'] for i in documents], model=model, tokenizer=tokenizer
+        sentences=[ins['question']] + [i['text'] for i in documents], model=model, tokenizer=retrieval_tokenizer
     )
     q_emb = embeddings[0].clone().unsqueeze(dim=0)
     scores = torch.matmul(input=q_emb, other=embeddings[1:].T).squeeze(dim=0)
@@ -85,7 +88,7 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
     system_prompt = system_prompt.strip()
 
     user_prompt = f"Please write a high-quantify answer for the given question using only the provided search documents (some of which might be irrelevant).\nQuestion: {ins['question']}".strip()
-    prompt = tokenizer.apply_chat_template(
+    prompt = llama3_tokenizer.apply_chat_template(
         conversation=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -120,11 +123,11 @@ def process_file(input_file: str, output_file: str, num_samples: int):
 def parse_args() -> BuildArgs:
     parser = argparse.ArgumentParser()
     parser.add_argument("--train_fp", type=str)
-    parser.add_argument("--eval_fp", type=str)
+    parser.add_argument("--dev_fp", type=str)
     parser.add_argument("--output_dir", type=str)
     args = parser.parse_args()
     return BuildArgs(
-        train_fp=args.train_fp, eval_fp=args.eval_fp, output_dir=args.output_dir
+        train_fp=args.train_fp, dev_fp=args.dev_fp, output_dir=args.output_dir
     )
 
 
@@ -135,15 +138,23 @@ if __name__ == '__main__':
 
     random.seed(42)
     model_name = "contriever-msmacro"
-    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name)
+    retrieval_tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name)
     model: PreTrainedModel = AutoModel.from_pretrained(
         pretrained_model_name_or_path=model_name,
         torch_dtype=torch.bfloat16,
         device_map="cuda:0"
     )
+
+    llama3_tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+        pretrained_model_name_or_path="meta-llama/Meta-Llama-3-8B",
+        use_fast=False
+    )
+    if llama3_tokenizer.chat_template is None:
+        llama3_tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
+
     process_file(
         input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=-1
     )
     process_file(
-        input_file=args.eval_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
+        input_file=args.dev_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
     )

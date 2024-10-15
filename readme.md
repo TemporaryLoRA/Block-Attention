@@ -47,7 +47,7 @@ docker build -t block_attention:latest .
 
 ```bash
 mkdir -p datahub/tqa
-mkdir -p datahub/2wiki
+#mkdir -p datahub/2wiki
 mkdir -p datahub/nq
 mkdir -p datahub/hqa
 ```
@@ -107,7 +107,7 @@ python3 data_process/nq.py --eval_fp <> --output_dir cache
 
 python3 data_process/tqa.py --eval_fp <> --train_fp <> --output_dir cache
 
-python3 data_process/2wiki.py --eval_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir cache
+python3 data_process/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir cache
 ```
 
 2. 构建训练集
