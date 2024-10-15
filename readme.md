@@ -15,35 +15,23 @@ first token) and FLOPs (floating point operations) to a very low level. It only 
 for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
 corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-## Docker 构建
+## Docker 
 
-1. Dockerfile依赖nvidia镜像`nvidia/cuda:11.8.0-devel-ubuntu22.04`，需要先执行命令：
-
-```bash
-docker pull nvidia/cuda:11.8.0-devel-ubuntu22.04
-```
-
-2. 在Block-Attention项目文件夹内部执行
-
-```bash
-docker build -t block_attention:latest . 
-```
+COMMING SOON ...
 
 ## DataProcess
 
-### 数据下载
+### Data Downloading
 
-论文所用数据的原始来源见：
-
-|      数据集      |                                                                     来源                                                                     |
+|      Dataset      |                                                                     Source                                                                     |
 |:-------------:|:------------------------------------------------------------------------------------------------------------------------------------------:|
 | 2WikiMultiHop |                                           https://huggingface.co/datasets/xanhho/2WikiMultihopQA                                           |
 |    NQ, TQA    | https://github.com/facebookresearch/FiD/blob/main/get-data.sh; https://github.com/facebookresearch/DPR/blob/main/dpr/data/download_data.py |
 |      HQA      |                                         https://github.com/hotpotqa/hotpot/blob/master/download.sh                                         |
 
-**注：**可分别执行以下命令下载文件
+**Note**: running following commands to prepare the datasets.
 
-首先在`Block-Attention`下创建各个数据集对应的存储路径。
+First of all, create the save folder for datasets under `Block-Attention` root folder.
 
 ```bash
 mkdir -p datahub/tqa
@@ -70,7 +58,7 @@ git clone https://github.com/facebookresearch/FiD
 cd FiD
 bash get-data.sh 
 
-# 重新回到 Block-Attention
+# back to Block-Attention
 cd Block-Attention/datahub
 ln -s FiD/open_domain_data/TQA/test.json tqa/test.json
 ln -s FiD/open_domain_data/TQA/train.json tqa/train.json
@@ -87,78 +75,71 @@ cd hqa
 wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 ```
 
-### 数据预处理
+### Data Pre-Processing
 
-`2WikiMultiHop`和`HQA`不需要处理，`HQA`选择下载下来的`hotpot_dev_distractor_v1.json`文件。
+1. There is no need to pre-process `2WikiMultiHop` and `HQA. `hotpot_dev_distractor_v1.json` of `HQA` is used for following pre-processing steps.
+2. After executing get-data.sh, NQ and TQA will call the preprocess.py file from the FiD repository to generate processed data files.
+3. The `DPR` repository provides Golden Documents (i.e., paragraph snippets that can answer questions) for the `NQ` dataset, which are not actually used and can be ignored.
 
-`NQ`和`TQA`在执行`get-data.sh`后，会调用`FiD`仓库的`preprocess.py`文件，生成处理之后的数据文件。
+### Construct Train and Test Set
 
-`DPR`仓库提供了`NQ`数据集的Golden Document(即能够回答的问题的段落片段)，没有实际用到，可以忽略不计。
+1. Download retrieval model: [facebook/contriever-msmacro](https://huggingface.co/facebook/contriever-msmarco)
+2. Execute following commands for pre-processing
 
-### 训练、测试数据集构建
+    ```bash 
+    
+    mkdir -p cache
+    
+    python3 data_process/hqa.py --eval_fp datahub/hqa/hotpot_dev_distractor_v1.json --output_dir cache
+    
+    python3 data_process/nq.py --eval_fp datahub/nq/test.json --output_dir cache
+    
+    python3 data_process/tqa.py --eval_fp datahub/tqa/test.json --train_fp datahub/tqa/train.json --output_dir cache
+    
+    python3 data_process/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir cache
+    ```
 
-1. 下载retrieval模型
+3. Construct Train Set
 
-- facebook/contriever-msmacro：https://huggingface.co/facebook/contriever-msmarco
+After completing the test data projection for each dataset in step 1, additional processing is still required.
 
-1. 分别执行以下命令
+1. Execute `data_process/random_sample.py` to randomly sample 20,000 data points from the training data of `2wiki` and `tqa` to create their respective training sets.
 
-```bash 
+    ```bash
+    python3 data_process/random_sample.py --input cache/2wiki_train/dataset --output cache/2wiki_train/dataset_p20k --num_samples 20000
+    python3 data_process/random_sample.py --input cache/tqa_train/dataset --output cache/tqa_train/dataset_p20k --num_samples 20000
+    ```
 
-mkdir -p cache
+2. Execute `data_process/merge.py` to combine the two training files obtained in step 1, resulting in the final training dataset.
 
-python3 data_process/hqa.py --eval_fp datahub/hqa/hotpot_dev_distractor_v1.json --output_dir cache
+    ```bash 
+    python3 data_process/merge.py --inputs "cache/2wiki_train/dataset_p20k cache/tqa_train/dataset_p20k" --output cache/tqa_2wiki_p20k
+    ```
 
-python3 data_process/nq.py --eval_fp datahub/nq/test.json --output_dir cache
-
-python3 data_process/tqa.py --eval_fp datahub/tqa/test.json --train_fp datahub/tqa/train.json --output_dir cache
-
-python3 data_process/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir cache
-```
-
-2. 构建训练集
-
-经过步骤 1 各数据集的测试数据极影完成，还要额外处理一下。
-
-1. 执行`data_process/random_sample.py`，从`2wiki`和`tqa`的训练数据中随机sample 20,000条数据组建各自的训练集
-
-```bash
-python3 data_process/random_sample.py --input cache/2wiki_train/dataset --output cache/2wiki_train/dataset_p20k --num_samples 20000
-python3 data_process/random_sample.py --input cache/tqa_train/dataset --output cache/tqa_train/dataset_p20k --num_samples 20000
-```
-
-2. 执行`data_process/merge.py`，将步骤 1 得到的两个训练文件合并 ，得到最终的训练数据集
-
-
-```bash 
-python3 data_process/merge.py --inputs "cache/2wiki_train/dataset_p20k cache/tqa_train/dataset_p20k" --output cache/tqa_2wiki_p20k
-```
-
-3. 使用ChatGPT获取补全`generated`字段以用作训练。
-
-经过第 2 步处理完之后，`tqa_2wiki_p20k`每行的数据结构如下，根据prompt请求ChatGPT，根据获取的结果补全`generated`字段即可。
-
-注意，prompt中的一些特殊token，如`<|begin_of_text|>`等在调用ChatGPT时需要处理一下。
-
-```python
-from typing import TypedDict, List
-
-Document = TypedDict("Document", {"title": str, "text": str, "score": float})
-
-SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
-    "input_ids": List[int],
-    "labels": List[int]
-})
-
-SFTDataInstance = TypedDict("SFTDataInstance", {
-    "prompt": str,
-    "question": str,
-    "answers": List[str],
-    "generated": str,
-    "inputs": SFTDataInstanceInputs,
-    "documents": List[Document]
-})
-```
+3. Use ChatGPT to complete the `generated` field for training purposes.
+   
+    After processing in step 2, the data structure for each line in `tqa_2wiki_p20k` is as follows. Request ChatGPT based on the prompt, and complete the `generated` field with the obtained results.
+    Note that some special tokens in the prompt, such as `<|begin_of_text|>`, need to be processed when calling ChatGPT.
+    
+    ```python
+    from typing import TypedDict, List
+    
+    Document = TypedDict("Document", {"title": str, "text": str, "score": float})
+    
+    SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
+        "input_ids": List[int],
+        "labels": List[int]
+    })
+    
+    SFTDataInstance = TypedDict("SFTDataInstance", {
+        "prompt": str,
+        "question": str,
+        "answers": List[str],
+        "generated": str,
+        "inputs": SFTDataInstanceInputs,
+        "documents": List[Document]
+    })
+    ```
 
 ## Running
 
