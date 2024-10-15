@@ -87,7 +87,7 @@ def make_block_attention_for_llama3(ins: SFTDataInstance, tokenizer: PreTrainedT
     attention_mask = attention_mask.to(dtype=torch.bfloat16)
     attention_mask = 1.0 - attention_mask
     attention_mask = attention_mask.masked_fill_(
-        mask=attention_mask.to(dtype=torch.bool), value=torch.finfo(dtype=torch.bfloat16).min
+        mask=attention_mask.to(dtype=torch.bool), value=torch.finfo(torch.bfloat16).min
     )
     return attention_mask.unsqueeze(dim=0).unsqueeze(dim=0)
 
