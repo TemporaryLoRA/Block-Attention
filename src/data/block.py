@@ -103,6 +103,14 @@ class BlockAttentionRawDataset:
         self.raw_dataset.clear()
         with open(self.fp, "r", encoding="utf-8") as f:
             items: List[SFTDataInstance] = [json.loads(i) for i in f]
+
+            for i in range(0, len(items)):
+                prompt, generated = items[i]["prompt"], items[i]["generated"]
+                p_input_ids = self.tokenizer.encode(prompt, add_special_tokens=False)
+                g_input_ids = self.tokenizer.encode(generated, add_special_tokens=False)
+                items[i]["inputs"]["input_ids"] = p_input_ids + g_input_ids
+                items[i]["inputs"]["labels"] = [-100] * len(p_input_ids) + g_input_ids
+
             self.raw_dataset.extend([i for i in items if len(i['inputs']['input_ids']) < self.max_length])
 
 

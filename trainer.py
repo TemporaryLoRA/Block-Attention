@@ -43,6 +43,8 @@ def _collator(features: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def data_collator(features: List[Dict[str, Any]], return_tensors: Optional[bool] = False) -> Dict[str, Any]:
+    for k in features[0]:
+        print(f"{k}: ", features[0][k].size())
     if len(features) == 1:
         return features[0]
     return _collator(features=features)

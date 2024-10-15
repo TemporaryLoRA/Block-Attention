@@ -20,15 +20,24 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
 
 
 class SFTRawDataset:
-    def __init__(self, fp: str, max_length: int):
+    def __init__(self, fp: str, max_length: int, tokenizer: PreTrainedTokenizer):
         self.fp = fp
         self.raw_dataset: List[SFTDataInstance] = []
         self.max_length = max_length
+        self.tokenizer: PreTrainedTokenizer = tokenizer
 
     def load_dataset(self):
         self.raw_dataset.clear()
         with open(self.fp, "r", encoding="utf-8") as f:
             items: List[SFTDataInstance] = [json.loads(i) for i in f]
+
+        for i in range(0, len(items)):
+            prompt, generated = items[i]["prompt"], items[i]["generated"]
+            p_input_ids = self.tokenizer.encode(prompt, add_special_tokens=False)
+            g_input_ids = self.tokenizer.encode(generated, add_special_tokens=False)
+            items[i]["inputs"]["input_ids"] = p_input_ids + g_input_ids
+            items[i]["inputs"]["labels"] = [-100] * len(p_input_ids)  + g_input_ids
+
         self.raw_dataset = [i for i in items if len(i["inputs"]['input_ids']) < self.max_length]
 
 
@@ -48,7 +57,7 @@ class SFTDataset(Dataset):
         }
 
 
-def get_dataset(fp: str, max_length: int) -> SFTDataset:
-    dataset = SFTRawDataset(fp=fp, max_length=max_length)
+def get_dataset(fp: str, max_length: int, tokenizer: PreTrainedTokenizer) -> SFTDataset:
+    dataset = SFTRawDataset(fp=fp, max_length=max_length, tokenizer=tokenizer)
     dataset.load_dataset()
     return SFTDataset(dataset=dataset)
