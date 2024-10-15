@@ -81,7 +81,7 @@ def process_instance(ins: Dict[str, Any]) -> SFTDataInstance:
 
 
 def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
-    system_prompt = "You are a intelligent AI assistant. Please answer questions based on the user's instruction. Below are some reference documents that may help you  in answering the user's question.\n\n"
+    system_prompt = "You are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's question.\n\n"
     for d_idx in range(0, len(ins['documents'])):
         doc = ins["documents"][d_idx]
         system_prompt += f"- Title: {doc['title']}\n{doc['text'].strip()}\n"
