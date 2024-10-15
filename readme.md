@@ -70,6 +70,12 @@ git clone https://github.com/facebookresearch/FiD
 cd FiD
 bash get-data.sh 
 
+# 重新回到 Block-Attention
+cd Block-Attention/datahub
+ln -s FiD/open_domain_data/TQA/test.json tqa/test.json
+ln -s FiD/open_domain_data/TQA/train.json tqa/train.json
+ln -s FiD/open_domain_data/NQ/test.json nq/test.json
+ln -s FiD/open_domain_data/NQ/train.json nq/train.json
 ```
 
 - HQA
@@ -103,9 +109,9 @@ mkdir -p cache
 
 python3 data_process/hqa.py --eval_fp datahub/hqa/hotpot_dev_distractor_v1.json --output_dir cache
 
-python3 data_process/nq.py --eval_fp <> --output_dir cache
+python3 data_process/nq.py --eval_fp datahub/nq/test.json --output_dir cache
 
-python3 data_process/tqa.py --eval_fp <> --train_fp <> --output_dir cache
+python3 data_process/tqa.py --eval_fp datahub/tqa/test.json --train_fp datahub/tqa/train.json --output_dir cache
 
 python3 data_process/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir cache
 ```

@@ -156,5 +156,5 @@ if __name__ == '__main__':
         input_file=args.train_fp, output_file=os.path.join(args.output_dir, "2wiki_train", "dataset"), num_samples=-1
     )
     process_file(
-        input_file=args.dev_fp, output_file=os.path.join(args.output_dir, "2wiki_eval", "dataset"), num_samples=-1
+        input_file=args.dev_fp, output_file=os.path.join(args.output_dir, "2wiki_dev", "dataset"), num_samples=-1
     )

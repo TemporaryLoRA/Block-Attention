@@ -100,13 +100,13 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
 
 def process_file(input_file: str, output_file: str, num_samples: int):
     with open(input_file, "r", encoding="utf-8") as f:
-        wiki_instances: List[Dict[str, Any]] = [json.loads(i) for i in f]
+        nq_instances: List[Dict[str, Any]] = json.load(f)
     if num_samples != -1:
-        wiki_instances = random.sample(population=wiki_instances, k=num_samples)
+        nq_instances = random.sample(population=nq_instances, k=num_samples)
 
     dataset: List[SFTDataInstance] = []
-    for i in tqdm(range(0, len(wiki_instances)), desc="Process 2wiki: ", total=len(wiki_instances)):
-        ins = process_instance(ins=wiki_instances[i])
+    for i in tqdm(range(0, len(nq_instances)), desc="Process NQ: ", total=len(nq_instances)):
+        ins = process_instance(ins=nq_instances[i])
         ins = tokenizer_instance(ins=ins)
         dataset.append(ins)
 

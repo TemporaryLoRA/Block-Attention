@@ -53,10 +53,6 @@ def compute_embeddings(sentences: List[str], model: PreTrainedModel, tokenizer: 
 
 
 def process_instance(ins: Dict[str, Any]) -> SFTDataInstance:
-    for i in range(0, len(ins['ctxs'])):
-        if isinstance(ins['ctxs'][i], str):
-            ins['ctxs'][i] = json.loads(ins['ctxs'][i])
-
     documents = [Document(title=i['title'], text=i['text'], score=0.0) for i in ins["ctxs"]]
     embeddings = compute_embeddings(
         sentences=[ins['question']] + [i['text'] for i in documents], model=model, tokenizer=retrieval_tokenizer
@@ -105,13 +101,13 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
 
 def process_file(input_file: str, output_file: str, num_samples: int):
     with open(input_file, "r", encoding="utf-8") as f:
-        wiki_instances: List[Dict[str, Any]] = [json.loads(i) for i in f]
+        tqa_instances: List[Dict[str, Any]] = json.load(f)
     if num_samples != -1:
-        wiki_instances = random.sample(population=wiki_instances, k=num_samples)
+        tqa_instances = random.sample(population=tqa_instances, k=num_samples)
 
     dataset: List[SFTDataInstance] = []
-    for i in tqdm(range(0, len(wiki_instances)), desc="Process 2wiki: ", total=len(wiki_instances)):
-        ins = process_instance(ins=wiki_instances[i])
+    for i in tqdm(range(0, len(tqa_instances)), desc="Process TQA: ", total=len(tqa_instances)):
+        ins = process_instance(ins=tqa_instances[i])
         ins = tokenizer_instance(ins=ins)
         dataset.append(ins)
 
@@ -156,5 +152,5 @@ if __name__ == '__main__':
         input_file=args.train_fp, output_file=os.path.join(args.output_dir, "tqa_train", "dataset"), num_samples=-1
     )
     process_file(
-        input_file=args.train_fp, output_file=os.path.join(args.output_dir, "tqa_eval", "dataset"), num_samples=-1
+        input_file=args.eval_fp, output_file=os.path.join(args.output_dir, "tqa_eval", "dataset"), num_samples=-1
     )
