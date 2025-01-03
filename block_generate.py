@@ -121,7 +121,7 @@ def build_block_past_key_values(
         prompt: str, tokenizer: PreTrainedTokenizer, model: LlamaForCausalLM, emb: LlamaRotaryEmbedding
 ) -> Tuple[List[DynamicCache], torch.Tensor]:
     blocks: List[str] = [
-        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's questions.\n\n"
+        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's question.\n\n"
     ]
     assert prompt.startswith(blocks[0])
     content = prompt[len(blocks[0]):]
@@ -142,7 +142,7 @@ def build_block_past_key_values(
 
     assert instruction_ans_response.startswith(
         "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n"
-        "Please write a high-quantify answer for the given question using only the provided search documents"
+        "Please write a high-quality answer for the given question using only the provided search documents"
     )
     blocks = [b for b in blocks if b != ""]
 

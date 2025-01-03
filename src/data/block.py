@@ -36,7 +36,7 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
 def make_block_attention_for_llama3(ins: SFTDataInstance, tokenizer: PreTrainedTokenizer) -> torch.Tensor:
     content = ins["prompt"] + ins["generated"]
     blocks: List[str] = [
-        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's questions.\n\n"
+        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's question.\n\n"
     ]
     assert content.startswith(blocks[0])
     content = content[len(blocks[0]):]
@@ -57,7 +57,7 @@ def make_block_attention_for_llama3(ins: SFTDataInstance, tokenizer: PreTrainedT
 
     assert blocks[-1].startswith(
         "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n"
-        "Please write a high-quantify answer for the given question using only the provided search documents"
+        "Please write a high-quality answer for the given question using only the provided search documents"
     )
     blocks = [b for b in blocks if b != ""]
 
