@@ -84,7 +84,7 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
     system_prompt = system_prompt.strip()
 
     user_prompt = f"Please write a high-quality answer for the given question using only the provided search documents (some of which might be irrelevant).\nQuestion: {ins['question']}".strip()
-    prompt = retrieval_tokenizer.apply_chat_template(
+    prompt = llama3_tokenizer.apply_chat_template(
         conversation=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
