@@ -137,7 +137,7 @@ if __name__ == '__main__':
     os.system(f"mkdir -p {os.path.join(args.output_dir, '2wiki_eval')}")
 
     random.seed(42)
-    model_name = "contriever-msmacro"
+    model_name = "facebook/contriever-msmarco"
     retrieval_tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name)
     model: PreTrainedModel = AutoModel.from_pretrained(
         pretrained_model_name_or_path=model_name,

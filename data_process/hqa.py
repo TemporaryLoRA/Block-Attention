@@ -84,7 +84,7 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
         system_prompt += f"- Title: {doc['title']}\n{doc['text'].strip()}\n"
     system_prompt = system_prompt.strip()
 
-    user_prompt = f"Please write a high-quantify answer for the given question using only the provided search documents (some of which might be irrelevant).\nQuestion: {ins['question']}".strip()
+    user_prompt = f"Please write a high-quality answer for the given question using only the provided search documents (some of which might be irrelevant).\nQuestion: {ins['question']}".strip()
     prompt = llama3_tokenizer.apply_chat_template(
         conversation=[
             {"role": "system", "content": system_prompt},
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     os.system(f"mkdir -p {os.path.join(args.output_dir, 'hqa_eval')}")
 
     random.seed(42)
-    model_name = "contriever-msmacro"
+    model_name = "facebook/contriever-msmarco"
     retrieval_tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path=model_name)
     model: PreTrainedModel = AutoModel.from_pretrained(
         pretrained_model_name_or_path=model_name,
