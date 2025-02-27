@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field, fields
-from typing import Any, Dict, List, Optional, Literal
+from dataclasses import dataclass, field
+from typing import Literal
 
 
 @dataclass
@@ -14,5 +14,14 @@ class DataArgs:
 @dataclass
 class ModelArgs:
     model_name: str
+    loss_reduction: Literal["mean", "sum"] = field(default="mean")
 
 
+@dataclass
+class BlockArgs:
+    # Whether to train the prompt
+    train_prompt: Literal["true", "false"]
+    # Whether to perform general SFT (Supervised Fine-Tuning) while conducting Block-Attention training
+    train_full_attention: Literal["true", "false"]
+    # Whether to add the special token `[Block-Attention]` during Block-Attention training
+    add_special_domain_tokens: Literal["true", "false"]

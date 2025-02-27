@@ -1,21 +1,19 @@
 import json
-import argparse
-
+import fire
 import torch
-from torch.nn import functional as F
+from flask_cors import CORS
+from flask import Flask, request
 
-from tqdm import tqdm
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, TypedDict, Union
+from typing import List, Optional, Tuple, TypedDict, Union
 
 from transformers.cache_utils import DynamicCache
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.models.llama.modeling_llama import LlamaRotaryEmbedding, LlamaConfig, LlamaForCausalLM
 
 from transformers import (
-    AutoTokenizer, PreTrainedTokenizer, AutoModelForCausalLM, PreTrainedModel, GenerationConfig, set_seed, AutoConfig
+    AutoTokenizer, PreTrainedTokenizer, AutoModelForCausalLM, GenerationConfig, AutoConfig
 )
-
 
 SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
     "input_ids": List[int],
@@ -28,6 +26,9 @@ SFTDataInstance = TypedDict("SFTDataInstance", {
     "generated": str,
     "inputs": SFTDataInstanceInputs
 })
+
+app = Flask(__name__)
+CORS(app, supports_credentials=True)
 
 
 def pkv_to_device(pkv: DynamicCache, device: Union[torch.device, str]) -> DynamicCache:
@@ -75,6 +76,7 @@ def apply_rotary_pos_emb(k, cos, sin, position_ids, unsqueeze_dim=1):
     k_embed = (k * cos) + (rotate_half(k) * sin)
     return k_embed.to(dtype=torch.bfloat16)
 
+
 def apply_pkv_rotary_position_embeddings(pkv: DynamicCache, emb: LlamaRotaryEmbedding) -> DynamicCache:
     device = pkv.key_cache[0].device
     emb.to(device=device)
@@ -116,19 +118,18 @@ def merge_and_rotary_past_key_values(pkvs: List[DynamicCache], emb: LlamaRotaryE
     return cache
 
 
-@torch.no_grad()
-def build_block_past_key_values(
-        prompt: str, tokenizer: PreTrainedTokenizer, model: LlamaForCausalLM, emb: LlamaRotaryEmbedding
-) -> Tuple[List[DynamicCache], torch.Tensor]:
+def make_rag_blocks(prompt: str) -> Tuple[List[str], str]:
     blocks: List[str] = [
         "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's question.\n\n"
     ]
-    assert prompt.startswith(blocks[0])
+    assert prompt.startswith(blocks[0]), json.dumps({
+        "prompt": prompt, "blocks": blocks[0]}, ensure_ascii=False, indent=4
+    )
     content = prompt[len(blocks[0]):]
 
     pos = content.find("<|eot_id|>") + len("<|eot_id|>")
     documents = content[:pos]
-    instruction_ans_response = content[pos:]
+    instruction_and_response = content[pos:]
 
     pos = documents.find("\n- Title:")
     while pos != -1:
@@ -138,13 +139,52 @@ def build_block_past_key_values(
         pos = documents.find("\n- Title:")
     assert documents.startswith("- Title:") and documents.endswith("<|eot_id|>"), documents
     blocks.append(documents[:-len("<|eot_id|>")])
-    instruction_ans_response = "<|eot_id|>" + instruction_ans_response
+    instruction_and_response = "<|eot_id|>" + instruction_and_response
 
-    assert instruction_ans_response.startswith(
+    assert instruction_and_response.startswith(
         "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n"
         "Please write a high-quality answer for the given question using only the provided search documents"
     )
     blocks = [b for b in blocks if b != ""]
+
+    assert "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n" in blocks[0], blocks[0]
+    blocks[0] = blocks[0].replace(
+        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n",
+        "<|user|>\n"
+    )
+    assert "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n" in instruction_and_response, instruction_and_response
+    instruction_and_response = instruction_and_response.replace(
+        "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n", "\n\n"
+    )
+    assert "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n" in instruction_and_response, instruction_and_response
+    instruction_and_response = instruction_and_response.replace(
+        "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n", "\n<|assistant|>\n"
+    )
+    return blocks, instruction_and_response
+
+
+@torch.no_grad()
+def build_block_past_key_values(
+        prompt: str, tokenizer: PreTrainedTokenizer, model: LlamaForCausalLM, emb: LlamaRotaryEmbedding,
+        num_local_attention_blocks: int, task_type: str = "rag", task: Optional[str] = None
+) -> Tuple[Optional[List[DynamicCache]], torch.Tensor]:
+    if task_type == "rag":
+        blocks, instruction_and_response = make_rag_blocks(prompt=prompt)
+    else:
+        assert False
+
+    if len(blocks) > num_local_attention_blocks:
+        instruction_and_response = "".join(blocks[num_local_attention_blocks:]) + instruction_and_response
+        blocks = blocks[:num_local_attention_blocks]
+    if num_local_attention_blocks == 0:
+        instruction_and_response = "".join(blocks) + instruction_and_response
+        blocks = []
+
+    print(f"Prompt | num local attention blocks: {num_local_attention_blocks}\n")
+    print(json.dumps({
+        "blocks": blocks,
+        "instruction_ans_response": instruction_and_response,
+    }, ensure_ascii=False, indent=4))
 
     caches: List[DynamicCache] = []
     input_ids = None
@@ -155,7 +195,8 @@ def build_block_past_key_values(
             device=model.device
         )
         if b_idx == 0:
-            input_ids = block_input_ids
+            # input_ids = block_attention_special_token + block_input_ids
+            input_ids = torch.cat(tensors=[block_attention_special_token, block_input_ids], dim=-1)
         else:
             input_ids = torch.cat(tensors=[input_ids, block_input_ids], dim=-1)
 
@@ -164,11 +205,14 @@ def build_block_past_key_values(
         )
         pkv = apply_pkv_rerotary_position_embeddings(pkv=output.past_key_values, emb=emb)
         caches.append(pkv)
+
     response_input_ids = torch.tensor(
-        data=[tokenizer.encode(instruction_ans_response, add_special_tokens=False)],
+        data=[tokenizer.encode(instruction_and_response, add_special_tokens=False)],
         dtype=torch.int64,
         device=model.device
     )
+    if input_ids is None:
+        return None, response_input_ids
     input_ids = torch.cat(tensors=[input_ids, response_input_ids], dim=-1)
     return caches, input_ids
 
@@ -176,12 +220,14 @@ def build_block_past_key_values(
 @torch.no_grad()
 def block_generate(
         prompt: str, generation_config: GenerationConfig, model: LlamaForCausalLM, emb: LlamaRotaryEmbedding,
-        tokenizer: PreTrainedTokenizer
+        tokenizer: PreTrainedTokenizer, num_local_attention_blocks: int, task_type: str, task: str
 ) -> str:
     past_key_values, input_ids = build_block_past_key_values(
-        prompt=prompt, tokenizer=tokenizer, model=model, emb=emb
+        prompt=prompt, tokenizer=tokenizer, model=model, emb=emb, num_local_attention_blocks=num_local_attention_blocks,
+        task_type=task_type, task=task
     )
-    past_key_values = merge_and_rotary_past_key_values(pkvs=past_key_values, emb=emb)
+    if past_key_values is not None:
+        past_key_values = merge_and_rotary_past_key_values(pkvs=past_key_values, emb=emb)
     input_length = input_ids.size(-1)
 
     outputs = model.generate(
@@ -191,46 +237,52 @@ def block_generate(
     return tokenizer.decode(token_ids=outputs[0][input_length:].tolist())
 
 
+@app.route('/generate', methods=['POST'])
+def _block_generate():
+    form = request.get_json()
+    generated = block_generate(
+        prompt=form["prompt"],
+        generation_config=generation_config,
+        model=model,
+        emb=emb,
+        tokenizer=tokenizer,
+        num_local_attention_blocks=form["num_local_attention_blocks"],
+        task_type=form.get("task_type", "rag"),
+        task=form.get("task")
+    )
+    print("generated: ", generated)
+    return {"ret": 0, "generated": generated, "message": ""}
+
+
 @dataclass
 class Args:
-    model_name: str
-    input_file: str
+    model: str
+    port: int
+    dtype: str
 
 
-def parse_args() -> Args:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str)
-    parser.add_argument("--input_file", type=str)
-    args = parser.parse_args()
-    return Args(model_name=args.model_name, input_file=args.input_file)
+if __name__ == '__main__':
+    args: Args = fire.Fire(component=Args)
+    tokenizer = AutoTokenizer.from_pretrained(
+        # pretrained_model_name_or_path="/root/llm_trainer/checkpoints/tulu3/llama31-8B_bs-128_5e-6_ce-sum/checkpoint-16274",
+        pretrained_model_name_or_path=args.model,
+        use_fast=False
+    )
 
+    block_attention_special_token = torch.tensor(
+        data=[tokenizer.encode("[Block-Attention]", add_special_tokens=False)], dtype=torch.int64, device="cuda:0"
+    )
 
-def main():
-    args = parse_args()
-    set_seed(seed=42)
-
-    with open(args.input_file, "r", encoding='utf-8') as f:
-        dataset: List[SFTDataInstance] = [json.loads(i) for i in f ]
-
-    model: LlamaForCausalLM = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=args.model_name,
+    model = AutoModelForCausalLM.from_pretrained(
+        pretrained_model_name_or_path=args.model,
         torch_dtype=torch.bfloat16,
         device_map="cuda:0",
         attn_implementation="flash_attention_2"
     )
-    config: LlamaConfig = AutoConfig.from_pretrained(pretrained_model_name_or_path=args.model_name)
-    emb: LlamaRotaryEmbedding = LlamaRotaryEmbedding(
-        dim=config.hidden_size // config.num_attention_heads,
-        max_position_embeddings=config.max_position_embeddings,
-        base=config.rope_theta
-    ).to(device=model.device, dtype=torch.float32)
     model.eval()
+    config: LlamaConfig = AutoConfig.from_pretrained(pretrained_model_name_or_path=args.model)
+    emb: LlamaRotaryEmbedding = LlamaRotaryEmbedding(config=config).to(device=model.device, dtype=torch.float32)
     emb.eval()
-
-    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
-        pretrained_model_name_or_path=args.model_name,
-        use_fast=False
-    )
 
     generation_config = GenerationConfig(
         do_sample=False,
@@ -238,21 +290,7 @@ def main():
         repetition_penalty=1.0,
         num_beams=1,
         eos_token_id=tokenizer.eos_token_id,
-        max_new_tokens=200,
-        stop_strings=['<|im_end|>', "<|eot_id|>", "<|end_of_text|>", "<|endoftext|>"]
+        max_new_tokens=2048,
+        stop_strings=['<|im_end|>', "<|eot_id|>", "<|end_of_text|>", "<|endoftext|>", "</s>", "Question:"]
     )
-
-    for i in dataset:
-        generated = block_generate(
-            prompt=i["prompt"], generation_config=generation_config, model=model, emb=emb, tokenizer=tokenizer
-        )
-        print("Prompt:")
-        print(i["prompt"])
-        print("Generated: ")
-        print(generated)
-        input()
-
-
-if __name__ == '__main__':
-    main()
-    from transformers.training_args import TrainingArguments
+    app.run(host="0.0.0.0", port=args.port)
