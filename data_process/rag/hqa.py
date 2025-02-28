@@ -102,7 +102,7 @@ def tokenizer_instance(ins: SFTDataInstance) -> SFTDataInstance:
 
 def process_file(input_file: str, output_file: str, num_samples: int):
     with open(input_file, "r", encoding="utf-8") as f:
-        hqa_instances: List[Dict[str, Any]] = [json.loads(i) for i in f]
+        hqa_instances: List[Dict[str, Any]] = json.load(f)
     if num_samples != -1:
         hqa_instances = random.sample(population=hqa_instances, k=num_samples)
 
