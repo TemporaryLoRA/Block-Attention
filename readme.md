@@ -15,35 +15,6 @@ first token) and FLOPs (floating point operations) to a very low level. It only 
 for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
 corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-## Data
-
-- Tulu3-Block-FT/Tulu3-Block-Rag Train Data: [download](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing). You can use it to train the two models, Tulu3-Block-FT and Tulu3-RAG.
-- Tulu3-SFT Train Data: [download](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing). You can use it to train the Tulu3-FT model.
-
-Each line is a training example, and the data format is as follows:
-
-```python
-class SFTInputs(TypedDict):
-   labels: List[int]
-   input_ids: List[int]
-
-
-class SFTInstanceWithChunks(TypedDict):
-   prompt: str
-   response: str
-   # for sft training 
-   inputs: SFTInputs
-   # The following fields exist only in the Tulu3-Block-FT Train Data and are used for Block-Attention training.
-   chunks: List[str]
-   # for block attention training
-   block_inputs: SFTInputs
-   # the last block has global attention
-   block_tokens: List[int]
-   response_tokens: int
-   # Whether it can be used for block-attention training
-   train_block: bool
-```
-
 ## DataProcess
 
 ### Tulu3 Dataset
@@ -209,6 +180,11 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
           "documents": List[Document]
       })
       ```
+      We have already prepared the processed data as below:
+         - Tulu3-Block-FT/Tulu3-Block-Rag Train Data: [download](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing). You can use it to train the two models, Tulu3-Block-FT and Tulu3-RAG.
+         - Tulu3-SFT Train Data: [download](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing). You can use it to train the Tulu3-FT model.
+
+Each line is a training example, and the data format is as follows:
    
    4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
    
