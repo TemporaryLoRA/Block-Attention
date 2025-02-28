@@ -142,7 +142,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 
 ### Data Pre-Processing
 
-1. There is no need to pre-process `2WikiMultiHop` and `HQA. `hotpot_dev_distractor_v1.json` of `HQA` is used for
+1. There is no need to pre-process `2WikiMultiHop` and `HQA`. `hotpot_dev_distractor_v1.json` of `HQA` is used for
    following pre-processing steps.
 2. After executing get-data.sh, NQ and TQA will call the preprocess.py file from the FiD repository to generate
    processed data files.
