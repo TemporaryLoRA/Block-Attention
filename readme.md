@@ -64,6 +64,9 @@ cd datahub
 
 git lfs install 
 git clone https://huggingface.co/datasets/allenai/tulu-3-sft-mixture
+# if you cannot access the dataset through huggingface in mainland china, you could try following commands
+# export HF_ENDPOINT=https://hf-mirror.com
+# huggingface-cli download --repo-type dataset --resume-download allenai/tulu-3-sft-mixture --local-dir allenai/tulu-3-sft-mixture
 
 mv tulu-3-sft-mixture tulu3
 mv tulu3/data/* tulu3/
