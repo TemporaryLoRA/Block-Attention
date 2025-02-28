@@ -69,8 +69,7 @@ git clone https://huggingface.co/datasets/allenai/tulu-3-sft-mixture
 # huggingface-cli download --repo-type dataset --resume-download allenai/tulu-3-sft-mixture --local-dir allenai/tulu-3-sft-mixture
 
 mv tulu-3-sft-mixture tulu3
-mv tulu3/data/* tulu3/
-rm -r tulu3/data tulu3/hf
+v datahub/tulu3/data datahub/tulu3/hf
 
 python3 data_process/tulu3/step0_split.py 
 python3 data_process/tulu3/step1_run.py 
