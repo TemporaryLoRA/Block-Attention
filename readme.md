@@ -163,61 +163,61 @@ python3 data_process/rag/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp 
 
 3. Construct Train Set
 
-After completing the test data projection for each dataset in step 1, additional processing is still required.
-
-1. Execute `data_process/rag/step0_random_sample.py` to randomly sample 20,000 data points from the training data of
-   `2wiki`
-   and `tqa` to create their respective training sets.
-
-```bash
-python3 data_process/rag/step0_random_sample.py --input datahub/rag/2wiki_train/dataset --output datahub/rag/2wiki_train/dataset_p20k --num_samples 20000
-python3 data_process/rag/step0_random_sample.py --input cache/tqa_train/dataset --output datahub/rag/tqa_train/dataset_p20k --num_samples 20000
-```
-
-2. Execute `data_process/rag/step1_merge.py` to combine the two training files obtained in step 1, resulting in the
-   final
-   training dataset.
-
-```bash 
-python3 data_process/rag/step1_merge.py --inputs "datahub/rag/2wiki_train/dataset_p20k datahub.rag/tqa_train/dataset_p20k" --output datahub/rag/tqa_2wiki_p20k
-```
-
-3. Use [Llama3.3-70B-Instruct](https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct) to complete the `generated`
-   field for training purposes.
-
-```python
-from typing import TypedDict, List
-
-Document = TypedDict("Document", {"title": str, "text": str, "score": float})
-
-SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
-    "input_ids": List[int],
-    "labels": List[int]
-})
-
-SFTDataInstance = TypedDict("SFTDataInstance", {
-    "prompt": str,
-    "question": str,
-    "answers": List[str],
-    "generated": str,
-    "inputs": SFTDataInstanceInputs,
-    "documents": List[Document]
-})
-```
-
-4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
-
-```bash 
-python3 data_process/rag/step2_to_tulu_format.py --input datahub/rag/tqa_2wiki_p20k --output datahub/rag/rag.train
-```
-
-5. Mix tulu3 data and rag data
-
-Mix the data of tulu3 and rag to obtain the final block-attention training data.
-
-```bash 
-python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.train --rag_input datahub/rag/rag.train --output datahub/mix_tulu3_rag.train
-```
+   After completing the test data projection for each dataset in step 1, additional processing is still required.
+   
+   1. Execute `data_process/rag/step0_random_sample.py` to randomly sample 20,000 data points from the training data of
+      `2wiki`
+      and `tqa` to create their respective training sets.
+   
+      ```bash
+      python3 data_process/rag/step0_random_sample.py --input datahub/rag/2wiki_train/dataset --output datahub/rag/2wiki_train/dataset_p20k --num_samples 20000
+      python3 data_process/rag/step0_random_sample.py --input cache/tqa_train/dataset --output datahub/rag/tqa_train/dataset_p20k --num_samples 20000
+      ```
+   
+   2. Execute `data_process/rag/step1_merge.py` to combine the two training files obtained in step 1, resulting in the
+      final
+      training dataset.
+   
+      ```bash 
+      python3 data_process/rag/step1_merge.py --inputs "datahub/rag/2wiki_train/dataset_p20k datahub.rag/tqa_train/dataset_p20k" --output datahub/rag/tqa_2wiki_p20k
+      ```
+   
+   3. Use [Llama3.3-70B-Instruct](https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct) to complete the `generated`
+      field for training purposes.
+   
+      ```python
+      from typing import TypedDict, List
+      
+      Document = TypedDict("Document", {"title": str, "text": str, "score": float})
+      
+      SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
+          "input_ids": List[int],
+          "labels": List[int]
+      })
+      
+      SFTDataInstance = TypedDict("SFTDataInstance", {
+          "prompt": str,
+          "question": str,
+          "answers": List[str],
+          "generated": str,
+          "inputs": SFTDataInstanceInputs,
+          "documents": List[Document]
+      })
+      ```
+   
+   4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
+   
+      ```bash 
+      python3 data_process/rag/step2_to_tulu_format.py --input datahub/rag/tqa_2wiki_p20k --output datahub/rag/rag.train
+      ```
+   
+   5. Mix tulu3 data and rag data
+      
+      Mix the data of tulu3 and rag to obtain the final block-attention training data.
+      
+      ```bash 
+      python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.train --rag_input datahub/rag/rag.train --output datahub/mix_tulu3_rag.train
+      ```
 
 ## Running
 
