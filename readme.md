@@ -108,6 +108,9 @@ mkdir -p datahub/hqa
 cd datahub
 git lfs install 
 git clone https://huggingface.co/datasets/xanhho/2WikiMultihopQA
+# optional: downloading from hf-mirror.com
+# export HF_ENDPOINT=https://hf-mirror.com
+# huggingface-cli download --repo-type dataset --resume-download xanhho/2WikiMultihopQA --local-dir 2WikiMultihopQA
 ln -s 2WikiMultihopQA 2wiki
 ```
 
@@ -151,17 +154,17 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 1. Download retrieval model: [facebook/contriever-msmacro](https://huggingface.co/facebook/contriever-msmarco)
 2. Execute following commands for pre-processing
 
-```bash 
-mkdir -p datahub/rag
-
-python3 data_process/rag/hqa.py --eval_fp datahub/hqa/hotpot_dev_distractor_v1.json --output_dir datahub/rag
-
-python3 data_process/rag/nq.py --eval_fp datahub/nq/test.json --output_dir datahub/rag
-
-python3 data_process/rag/tqa.py --eval_fp datahub/tqa/test.json --train_fp datahub/tqa/train.json --output_dir datahub/rag
-
-python3 data_process/rag/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir datahub/rag
-```
+   ```bash 
+   mkdir -p datahub/rag
+   
+   python3 data_process/rag/hqa.py --eval_fp datahub/hqa/hotpot_dev_distractor_v1.json --output_dir datahub/rag
+   
+   python3 data_process/rag/nq.py --eval_fp datahub/nq/test.json --output_dir datahub/rag
+   
+   python3 data_process/rag/tqa.py --eval_fp datahub/tqa/test.json --train_fp datahub/tqa/train.json --output_dir datahub/rag
+   
+   python3 data_process/rag/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp datahub/2wiki/train.parquet --output_dir datahub/rag
+   ```
 
 3. Construct Train Set
 
@@ -238,4 +241,3 @@ python3 data_process/rag/2wiki.py --dev_fp datahub/2wiki/dev.parquet --train_fp 
 ```bash
 python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
 ```
-
