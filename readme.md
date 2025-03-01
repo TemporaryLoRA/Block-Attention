@@ -24,7 +24,7 @@ Notably, Block-attention significantly reduces the time to first token (TTFT) an
 
 Additionally, we also elaborate on how Block-attention is applied in Game AI scenario and the substantial potential benefits it entails. We strongly suggest researchers in the gaming field not to overlook our work.
 
-![Illustration of Block-Attention](./overview.png)
+![Illustration of Block-Attention](./figs/overview.png)
 
 ## 🔥 News
 
