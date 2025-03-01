@@ -1,6 +1,18 @@
-# BLOCK-ATTENTION FOR EFFICIENT RAG
+<div align="center">
 
-This is the repository for the [BLOCK-ATTENTION FOR EFFICIENT RAG](https://arxiv.org/abs/2409.15355).
+# Block-Attention for Efficient Prefilling
+
+</div>
+
+<h5 align=center>
+
+[![arXiv](https://img.shields.io/badge/arXiv-2411.16365v3-b31b1b.svg)](https://arxiv.org/abs/2409.15355)
+[![hf](https://img.shields.io/badge/🤗-Hugging%20Face-blue.svg)](https://huggingface.co/ldsjmdy)
+[![GitHub stars](https://img.shields.io/github/stars/maziao/M2RAG.svg?colorA=orange&colorB=orange&logo=github)](https://github.com/TemporaryLoRA/Block-Attention)
+
+</h5>
+
+Implementation of paper [Block-Attention for Efficient Prefilling](https://arxiv.org/abs/2409.15355).
 
 We introduce Block-Attention, an attention mechanism designed to address the increased inference latency and cost in
 Retrieval-Augmented Generation (RAG) scenarios. Unlike existing works that encodes the whole context, its main idea lies
@@ -15,19 +27,46 @@ first token) and FLOPs (floating point operations) to a very low level. It only 
 for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
 corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-## DataProcess
+![Illustration of Block-Attention](./figs/block_attention.png)
 
-### Tulu3 Dataset
+## 🔥 News
 
-#### Data Downloading
+- **2025 March 1:** Code, datasets and model weights are released.
+- **2024 Sep 15:** Paper available on [arXiv](https://arxiv.org/abs/2409.15355).
 
-|        Dataset        |                           Source                           |
-|:---------------------:|:----------------------------------------------------------:| 
-| tulu3-sft-sft-mixture | https://huggingface.co/datasets/allenai/tulu-3-sft-mixture |
+## 📋 Table of Contents
 
-#### Data Prepare
+- [Multi-modal Retrieval Augmented Multi-modal Generation](#block-attention-for-efficient-prefilling)
+  - [🔥 News](#-news)
+  - [📋 Table of Contents](#-table-of-contents)
+  - [🤗 Resources](#-resources)
+  - [🚀 Getting Started](#-getting-started)
+    - [🔧 Fine-tuning](#-fine-tuning-models)
+    - [♻️ Inference](#-inference)
+  - [📎 Citation](#-citation)
 
-**Note**: running following commands to prepare the dataset.
+## 🤗 Resources
+
+| Item                                    | Repository                                                                                     |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Tulu3-sft-mixture Dataset               | [🤗 allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)    |
+| Tulu3-SFT Train Dataseet                | [🤗 allenai/tulu-3-sft-mixture](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing)|
+| Tulu3-Block-FT / Tulu3-Block-Rag Train Dataset | [💾 Google Drive](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing) |
+| Tulu3-Block-FT Model | [🤗 ldsjmdy/Tulu3-Block-FT](https://huggingface.co/ldsjmdy/Tulu3-Block-FT) |
+| Tulu3-SFT Model (Baseline) | [🤗 ldsjmdy/Tulu3-SFT](https://huggingface.co/ldsjmdy/Tulu3-SFT) |
+| Tulu3-RAG Model (Baseline) | [🤗 ldsjmdy/Tulu3-RAG](https://huggingface.co/ldsjmdy/Tulu3-RAG) |
+
+
+## 🚀 Getting Started
+
+Although we provided the processed dataset in [🤗 Resources](#-resources), we still release our scripts for processing the raw data as below
+
+---
+
+### Data Process
+
+#### 1. Tulu-3 Dataset Process
+**Note**: running following commands to prepare the Tulu-3 training dataset.
 
 ```bash 
 mkdir -p datahub/
@@ -40,7 +79,7 @@ git clone https://huggingface.co/datasets/allenai/tulu-3-sft-mixture
 # huggingface-cli download --repo-type dataset --resume-download allenai/tulu-3-sft-mixture --local-dir allenai/tulu-3-sft-mixture
 
 mv tulu-3-sft-mixture tulu3
-v datahub/tulu3/data datahub/tulu3/hf
+mv datahub/tulu3/data datahub/tulu3/hf
 
 python3 data_process/tulu3/step0_split.py 
 python3 data_process/tulu3/step1_run.py 
@@ -50,9 +89,9 @@ python3 data_process/tulu3/step2_run_block.py
 After completing the above steps, we will obtain `datahub/tulu3/sft.train` for supervised fine-tuning (SFT) and
 `datahub/tulu3/block.train` for our Block-Attention fine-tuning.
 
-### RAG Dataset
+#### 2. RAG Dataset Process
 
-#### Data Downloading
+##### 2.1 Data Downloading
 
 |    Dataset    |                                                                   Source                                                                   |
 |:-------------:|:------------------------------------------------------------------------------------------------------------------------------------------:|
@@ -60,7 +99,7 @@ After completing the above steps, we will obtain `datahub/tulu3/sft.train` for s
 |    NQ, TQA    | https://github.com/facebookresearch/FiD/blob/main/get-data.sh; https://github.com/facebookresearch/DPR/blob/main/dpr/data/download_data.py |
 |      HQA      |                                         https://github.com/hotpotqa/hotpot/blob/master/download.sh                                         |
 
-#### Data Prepare
+##### 2.2 Data Prepare
 
 **Note**: running following commands to prepare the datasets.
 
@@ -111,7 +150,7 @@ cd hqa
 wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 ```
 
-### Data Pre-Processing
+##### 2.3 Data Pre-Processing
 
 1. There is no need to pre-process `2WikiMultiHop` and `HQA`. `hotpot_dev_distractor_v1.json` of `HQA` is used for
    following pre-processing steps.
@@ -120,7 +159,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 3. The `DPR` repository provides Golden Documents (i.e., paragraph snippets that can answer questions) for the `NQ`
    dataset, which are not actually used and can be ignored.
 
-### Construct Train and Test Set
+##### 2.4 Construct Train and Test Set
 
 1. Download retrieval model: [facebook/contriever-msmacro](https://huggingface.co/facebook/contriever-msmarco)
 2. Execute following commands for pre-processing
@@ -183,8 +222,6 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
       We have already prepared the processed data as below:
          - Tulu3-Block-FT/Tulu3-Block-Rag Train Data: [download](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing). You can use it to train the two models, Tulu3-Block-FT and Tulu3-RAG.
          - Tulu3-SFT Train Data: [download](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing). You can use it to train the Tulu3-FT model.
-
-Each line is a training example, and the data format is as follows:
    
    4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
    
@@ -200,7 +237,7 @@ Each line is a training example, and the data format is as follows:
       python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.train --rag_input datahub/rag/rag.train --output datahub/mix_tulu3_rag.train
       ```
 
-## Running
+### 🔧 Fine-tuning Models
 
 1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
    And you need to define the following environment variables in the file:
@@ -210,10 +247,26 @@ Each line is a training example, and the data format is as follows:
 - `EVAL_FP`: Test data file, with the same format as `TRAIN_FP`
 - `SAVE_DIR`: Model saving path
 
-## Inference
+### ♻️ Inference
 
 1. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
 
 ```bash
 python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
+```
+
+## 📎 Citation
+
+If you find this repository useful for your research, please cite our paper:
+
+```bibtex
+@misc{sun2024blockattentionefficientrag,
+      title={Block-Attention for Efficient RAG}, 
+      author={East Sun and Yan Wang and Lan Tian},
+      year={2024},
+      eprint={2409.15355},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2409.15355}, 
+}
 ```
