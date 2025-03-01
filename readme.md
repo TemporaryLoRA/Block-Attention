@@ -42,7 +42,7 @@ corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
   - [🤗 Resources](#-resources)
   - [🚀 Getting Started](#-getting-started)
     - [🔧 Fine-tuning](#-fine-tuning-models)
-    - [♻️ Inference](#-inference)
+    - [♻️ Inference](# -inference)
   - [📎 Citation](#-citation)
 
 ## 🤗 Resources
