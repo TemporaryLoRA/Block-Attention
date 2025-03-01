@@ -14,18 +14,15 @@
 
 Implementation of paper [Block-Attention for Efficient Prefilling](https://arxiv.org/abs/2409.15355).
 
-We introduce Block-Attention, an attention mechanism designed to address the increased inference latency and cost in
-Retrieval-Augmented Generation (RAG) scenarios. Unlike existing works that encodes the whole context, its main idea lies
-in dividing the retrieved documents into blocks, where each block calculates key-value (KV) states independently except
-for the final block. In RAG scenarios, by defining each passage as a block, Block-Attention enables us to pre-compute
-the KV states for all passages and cache them in memory, significantly reducing the latency and the computation cost
-during inference. The implementation involves block segmentation, positional encoding calculation, and fine-tuning the
-LLM to adapt to the Block-Attention mechanism. Experiments on four RAG benchmarks demonstrate that after block
-fine-tuning, the Block Attention model can achieve performance comparable to (68.4\% vs 67.9\% on Llama3) or even
-better (62.8\% vs 59.6\% on Mistral) than self-attention models. Notably, Block-Attention reduces the TTFT (the time to
-first token) and FLOPs (floating point operations) to a very low level. It only takes 45 ms to output the first token
-for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
-corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
+We introduce Block-attention, an attention mechanism designed to address the increased inference latency and cost in Retrieval-Augmented Generation (RAG) scenarios. 
+Traditional approaches often encode the entire context in an auto-regressive manner.
+Instead, Block-attention divides retrieved documents into discrete blocks, with each block independently calculating key-value (KV) states except for the final block.
+In RAG scenarios, by defining each passage as a block, Block-attention enables us to reuse the KV states of passages that have been seen before, thereby significantly reducing the latency and the computation overhead during inference.
+The implementation of Block-attention involves block segmentation, position re-encoding, and fine-tuning the LLM to adapt to the Block-attention mechanism. 
+Experiments on 11 diverse benchmarks, including RAG, ICL, and general domains, demonstrate that after block fine-tuning, the Block-attention model not only achieves performance comparable to that of full-attention models, but can also seamlessly switch between the block and full attention modes without any performance loss.
+Notably, Block-attention significantly reduces the time to first token (TTFT) and floating point operations (FLOPs) to a very low level. It only takes 45 ms to output the first token for an input sequence with a total length of 32K. Compared to the full-attention models, the TTFT and corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively. 
+
+Additionally, we also elaborate on how Block-attention is applied in Game AI scenario and the substantial potential benefits it entails. We strongly suggest researchers in the gaming field not to overlook our work.
 
 ![Illustration of Block-Attention](./overview.png)
 
@@ -44,6 +41,7 @@ corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
     - [🔧 Data Process](#️-data-process)
     - [⚙️ Fine-tuning](#️-fine-tuning-models)
     - [♻️ Inference](#️-inference)
+    - [📈 Evaluation with OpenCompass](#️-evaluation-with-opencompass)
   - [📎 Citation](#-citation)
 
 ## 🤗 Resources
@@ -255,6 +253,10 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 ```bash
 python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
 ```
+
+### 📈 Evaluation with OpenCompass
+
+We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct our evaluations on general and RAG benchmarks.
 
 ## 📎 Citation
 
