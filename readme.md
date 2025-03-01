@@ -41,8 +41,9 @@ corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
   - [📋 Table of Contents](#-table-of-contents)
   - [🤗 Resources](#-resources)
   - [🚀 Getting Started](#-getting-started)
-    - [🔧 Fine-tuning](#-fine-tuning-models)
-    - [♻️ Inference](# -inference)
+    - [🔧 Data Process](#-fine-tuning-models)
+    - [⚙️ Fine-tuning](#-fine-tuning-models)
+    - [♻️ Inference](#-inference)
   - [📎 Citation](#-citation)
 
 ## 🤗 Resources
@@ -63,7 +64,7 @@ Although we provided the processed dataset in [🤗 Resources](#-resources), we 
 
 ---
 
-### Data Process
+### 🔧 Data Process
 
 #### 1. Tulu-3 Dataset Process
 **Note**: running following commands to prepare the Tulu-3 training dataset.
@@ -237,7 +238,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
       python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.train --rag_input datahub/rag/rag.train --output datahub/mix_tulu3_rag.train
       ```
 
-### 🔧 Fine-tuning Models
+### ⚙️ Fine-tuning Models
 
 1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
    And you need to define the following environment variables in the file:
