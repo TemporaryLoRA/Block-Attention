@@ -41,9 +41,9 @@ corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
   - [📋 Table of Contents](#-table-of-contents)
   - [🤗 Resources](#-resources)
   - [🚀 Getting Started](#-getting-started)
-    - [🔧 Data Process](#-fine-tuning-models)
-    - [⚙️ Fine-tuning](#-fine-tuning-models)
-    - [♻️ Inference](#-inference)
+    - [🔧 Data Process](#️-data-process)
+    - [⚙️ Fine-tuning](#️-fine-tuning-models)
+    - [♻️ Inference](#️-inference)
   - [📎 Citation](#-citation)
 
 ## 🤗 Resources
