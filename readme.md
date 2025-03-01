@@ -27,7 +27,7 @@ first token) and FLOPs (floating point operations) to a very low level. It only 
 for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
 corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-![Illustration of Block-Attention](./figs/block_attention.png)
+![Illustration of Block-Attention](./overview.png)
 
 ## 🔥 News
 
