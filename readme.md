@@ -256,7 +256,7 @@ python3 block_generate.py --model_name <the path of block model> --input_file <a
 
    Use `eval.py` to conduct the evaluation:
    ```bash
-   python3 eval.py --input <the path of file containing evaluation results>
+   python3 rag_eval.py --input <the path of file containing evaluation results>
    ```
 3. Evaluation on ICL and general benchmarks
 

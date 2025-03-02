@@ -1,13 +1,19 @@
+import re
 import gc
 import json
 import random
-from typing import Any, Dict, List, Optional, TypedDict
+from dataclasses import dataclass
+from typing import Any, Set, Dict, List, Tuple, Union, Optional, Literal, NamedTuple, TypedDict, Callable
 
 import numpy as np
 import torch
+from numpy.ma.tests.test_core import num_ids
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from transformers import PreTrainedTokenizer
+
+from data_process.tulu3.preprocess_block import process_tulu_instance
+from src.data.tools import process_messages
 
 SFTInputs = TypedDict("SFTInputs", {
     "input_ids": List[int],
@@ -16,6 +22,7 @@ SFTInputs = TypedDict("SFTInputs", {
 
 SFTInstance = TypedDict("SFTInstance", {
     "inputs": SFTInputs,
+    # `chunks` NotRequired
     "chunks": List[str],
     "block_inputs": SFTInputs,
     "block_tokens": List[int],
@@ -31,22 +38,22 @@ DatasetOutput = TypedDict("DatasetOutput", {
 
 
 def build_attention_mask(
-        local_attention_chunk_tokens: torch.LongTensor, global_attention_chunk_tokens: torch.LongTensor,
+        local_attention_block_tokens: torch.LongTensor, global_attention_block_tokens: torch.LongTensor,
         lower_triangular_matrix: torch.Tensor
 ) -> torch.Tensor:
     """
-    For a sequence, we split it into n chunks, which are arranged in the order they appear in the sequence.
-    The first n - 1 chunks have only local attention scope, meaning that tokens within a chunk can only see the tokens to their left within the same chunk (including themselves).
-    The n-th chunk, however, has a global attention scope, meaning that tokens within this chunk can see all the tokens to their left (including themselves).
+    For a sequence, we split it into n blocks, which are arranged in the order they appear in the sequence.
+    The first n - 1 blocks have only local attention scope, meaning that tokens within a block can only see the tokens to their left within the same block (including themselves).
+    The n-th block, however, has a global attention scope, meaning that tokens within this block can see all the tokens to their left (including themselves).
 
-    Given local_attention_chunks and global_attention_chunk, num_tokens = sum(local_attention_chunks) + global_attention_chunk.
+    Given local_attention_blocks and global_attention_block, num_tokens = sum(local_attention_blocks) + global_attention_block.
     Finally, a torch.Tensor matrix of shape [num_tokens, num_tokens] will be returned, which is a lower triangular matrix.
 
-    :param local_attention_chunk_tokens: local_attention_chunks[i] represents the number of tokens in the ith chunk, which has only local attention scope.
-    :param global_attention_chunk_tokens: The number of tokens in the chunk that has global attention scope.
+    :param local_attention_block_tokens: local_attention_block[i] represents the number of tokens in the ith block, which has only local attention scope.
+    :param global_attention_block_tokens: The number of tokens in the block that has global attention scope.
     :param lower_triangular_matrix: A lower triangular matrix of shape [num_tokens, num_tokens].
 
-    For the input `local_attention_chunks = [1, 2], global_attention_chunk = 1`, the attention mask matrix should be:
+    For the input `local_attention_blocks = [1, 2], global_attention_block = 1`, the attention mask matrix should be:
     ```python
     [
         [1, 0, 0, 0]
@@ -57,15 +64,15 @@ def build_attention_mask(
     ```
     """
 
-    num_tokens = (local_attention_chunk_tokens.sum() + global_attention_chunk_tokens).item()
+    num_tokens = (local_attention_block_tokens.sum() + global_attention_block_tokens).item()
     attention_mask = torch.zeros(size=(num_tokens, num_tokens), dtype=torch.bool)
 
     offset = 0
-    for n_tokens in local_attention_chunk_tokens:
+    for n_tokens in local_attention_block_tokens:
         attention_mask[offset: offset + n_tokens, offset: offset + n_tokens] = \
             lower_triangular_matrix[:n_tokens, :n_tokens]
         offset += n_tokens
-    n_tokens = global_attention_chunk_tokens
+    n_tokens = global_attention_block_tokens
     attention_mask[-n_tokens:] = lower_triangular_matrix[num_tokens - n_tokens: num_tokens, :num_tokens]
     return attention_mask
 
@@ -101,16 +108,13 @@ class SFTBlockRawDataset:
         self.tokenizer = tokenizer
         self.model_name = model_name
 
-        self.raw_dataset: List[SFTInstance] = []
+        self.raw_dataset: List[Dict[str, Any]] = []
 
     def load_dataset(self):
         self.raw_dataset = []
         with open(self.fp, 'r', encoding='utf-8') as f:
             for i, line in tqdm(enumerate(f), desc=f"Loading dataset {self.fp}"):
                 self.raw_dataset.append(json.loads(line))
-
-        if self.max_length != -1:
-            self.raw_dataset = [i for i in self.raw_dataset if len(i['inputs']['input_ids']) <= self.max_length]
 
 
 class SFTBlockDataset(Dataset):
@@ -120,12 +124,13 @@ class SFTBlockDataset(Dataset):
             train_prompt: bool,
             train_full_attention: bool,
             add_special_domain_tokens: bool,
-            max_length: int
+            max_length: int,
+            num_blocks_limit: int
     ):
         super().__init__()
         self.dataset = dataset
         self.raw_dataset = []
-        self.num_block_training_cases = 0
+        self.num_blocks_limit = num_blocks_limit
 
         self.train_prompt = train_prompt
         self.train_full_attention = train_full_attention
@@ -142,12 +147,24 @@ class SFTBlockDataset(Dataset):
         self._prepare_dataset()
 
     def _prepare_dataset(self):
+        dataset: List[SFTInstance] = []
         for i, ins in tqdm(
-                enumerate(self.dataset.raw_dataset),
-                desc=f"Preparing: ",
-                total=len(self.dataset.raw_dataset)
+                enumerate(self.dataset.raw_dataset), desc="Preparing: ", total=len(self.dataset.raw_dataset)
         ):
+            ins: Dict[str, Any]
+            if "messages" in ins:
+                dataset.extend(process_messages(
+                    messages=ins["messages"], num_blocks_limit=self.num_blocks_limit, tokenizer=self.tokenizer)
+                )
+            else:
+                dataset.append(ins)
+        self.dataset.raw_dataset = []
+
+        for i, ins in tqdm(enumerate(dataset), desc=f"Preparing: ", total=len(dataset)):
             ins: SFTInstance
+
+            if len(ins["inputs"]["input_ids"]) > self.max_length:
+                continue
 
             if self.train_full_attention:
                 self.raw_dataset.append({
@@ -158,7 +175,6 @@ class SFTBlockDataset(Dataset):
             if not ins["train_block"]:
                 continue
 
-            self.num_block_training_cases += 1
             input_ids = ins["block_inputs"]["input_ids"]
             if self.add_special_domain_tokens:
                 input_ids = self._block_attention_tokens + input_ids
@@ -179,11 +195,6 @@ class SFTBlockDataset(Dataset):
             })
 
         random.shuffle(self.raw_dataset)
-        print("Block Training Cases: ", self.num_block_training_cases)
-        print("Full Attention Training Cases: ", len(self.dataset.raw_dataset))
-        print("Block Training Ratio: ", self.num_block_training_cases / len(self.dataset.raw_dataset))
-        self.dataset.raw_dataset = []
-
         gc.collect()
         torch.cuda.empty_cache()
 
@@ -202,8 +213,8 @@ class SFTBlockDataset(Dataset):
             }
 
         attention_mask = build_attention_mask(
-            local_attention_chunk_tokens=self.raw_dataset[idx]["block_tokens"][:-1],
-            global_attention_chunk_tokens=(
+            local_attention_block_tokens=self.raw_dataset[idx]["block_tokens"][:-1],
+            global_attention_block_tokens=(
                     self.raw_dataset[idx]["block_tokens"][-1] + self.raw_dataset[idx]["response_tokens"]
             ),
             lower_triangular_matrix=self.helper_matrix
@@ -232,7 +243,8 @@ def get_dataset(
         tokenizer: PreTrainedTokenizer,
         train_prompt: bool,
         train_full_attention: bool,
-        add_special_domain_tokens: bool
+        add_special_domain_tokens: bool,
+        num_blocks_limit: int
 ) -> SFTBlockDataset:
     dataset = SFTBlockRawDataset(fp=fp, model_name=model_name, max_length=max_length, tokenizer=tokenizer)
     dataset.load_dataset()
@@ -241,5 +253,6 @@ def get_dataset(
         train_prompt=train_prompt,
         train_full_attention=train_full_attention,
         add_special_domain_tokens=add_special_domain_tokens,
-        max_length=max_length
+        max_length=max_length,
+        num_blocks_limit=num_blocks_limit
     )
