@@ -196,8 +196,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
       python3 data_process/rag/step1_merge.py --inputs "datahub/rag/2wiki_train/dataset_p20k datahub.rag/tqa_train/dataset_p20k" --output datahub/rag/tqa_2wiki_p20k
       ```
    
-   3. Use [Llama3.3-70B-Instruct](https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct) to complete the `generated`
-      field for training purposes.
+   3. Complete the `generated` field for training purposes. We have already prepared the processed data, which can be found in [🤗 Resources](#-resources).
    
       ```python
       from typing import TypedDict, List
@@ -218,9 +217,6 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
           "documents": List[Document]
       })
       ```
-      We have already prepared the processed data as below:
-         - Tulu3-Block-FT/Tulu3-Block-Rag Train Data: [download](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing). You can use it to train the two models, Tulu3-Block-FT and Tulu3-RAG.
-         - Tulu3-SFT Train Data: [download](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing). You can use it to train the Tulu3-FT model.
    
    4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
    
