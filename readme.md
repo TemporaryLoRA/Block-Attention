@@ -33,7 +33,7 @@ Additionally, we also elaborate on how Block-attention is applied in Game AI sce
 
 ## 📋 Table of Contents
 
-- [Multi-modal Retrieval Augmented Multi-modal Generation](#block-attention-for-efficient-prefilling)
+- [Block-Attention For Efficient Prefilling](#block-attention-for-efficient-prefilling)
   - [🔥 News](#-news)
   - [📋 Table of Contents](#-table-of-contents)
   - [🤗 Resources](#-resources)
