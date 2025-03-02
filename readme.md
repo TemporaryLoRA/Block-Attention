@@ -41,7 +41,7 @@ Additionally, we also elaborate on how Block-attention is applied in Game AI sce
     - [🔧 Data Process](#-data-process)
     - [⚙️ Fine-tuning](#️-fine-tuning-models)
     - [♻️ Inference](#️-inference)
-    - [📈 Evaluation](#️-evaluation)
+    - [📈 Evaluation](#-evaluation)
   - [📎 Citation](#-citation)
 
 ## 🤗 Resources
