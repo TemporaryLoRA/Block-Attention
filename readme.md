@@ -297,7 +297,7 @@ print(r.json()["generated"])
 
 1. Evaluation on RAG benchmarks
 
-   Use `eval.py` to conduct the evaluation:
+   Use `rag_eval.py` to conduct the evaluation:
    ```bash
    python3 rag_eval.py --input <the path of file containing evaluation results>
    ```
