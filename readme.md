@@ -264,7 +264,7 @@ python3 block_generate.py --model_name <the path of block model> --input_file <a
    ```
 3. Evaluate general benchmarks
 
-   We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct our evaluations on general and RAG benchmarks.
+   We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct evaluations on ICL and general domains.
 
 ## 📎 Citation
 
