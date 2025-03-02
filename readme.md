@@ -38,7 +38,7 @@ Additionally, we also elaborate on how Block-attention is applied in Game AI sce
   - [📋 Table of Contents](#-table-of-contents)
   - [🤗 Resources](#-resources)
   - [🚀 Getting Started](#-getting-started)
-    - [🔧 Data Process](#️-data-process)
+    - [🔧 Data Process](#-data-process)
     - [⚙️ Fine-tuning](#️-fine-tuning-models)
     - [♻️ Inference](#️-inference)
     - [📈 Evaluation with OpenCompass](#️-evaluation-with-opencompass)
