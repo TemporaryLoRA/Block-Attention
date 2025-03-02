@@ -48,9 +48,9 @@ Additionally, we also elaborate on how Block-attention is applied in Game AI sce
 
 | Item                                    | Repository                                                                                     |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Tulu3-sft-mixture Dataset               | [🤗 allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)    |
-| Tulu3-SFT Train Dataseet                | [🤗 allenai/tulu-3-sft-mixture](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing)|
+| Tulu3-SFT Train Dataseet                | [💾 Google Drive](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing)|
 | Tulu3-Block-FT / Tulu3-Block-Rag Train Dataset | [💾 Google Drive](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing) |
+| Tulu3-sft-mixture Dataset               | [🤗 allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)    |
 | Tulu3-Block-FT Model | [🤗 ldsjmdy/Tulu3-Block-FT](https://huggingface.co/ldsjmdy/Tulu3-Block-FT) |
 | Tulu3-SFT Model (Baseline) | [🤗 ldsjmdy/Tulu3-SFT](https://huggingface.co/ldsjmdy/Tulu3-SFT) |
 | Tulu3-RAG Model (Baseline) | [🤗 ldsjmdy/Tulu3-RAG](https://huggingface.co/ldsjmdy/Tulu3-RAG) |
