@@ -15,10 +15,13 @@ first token) and FLOPs (floating point operations) to a very low level. It only 
 for an input sequence with a total length of 32K. Compared with the self-attention model, the time consumption and
 corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-## Data
+## Processed Data
 
-- Tulu3-Block-FT/Tulu3-Block-Rag Train Data: [download](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing). You can use it to train the two models, Tulu3-Block-FT and Tulu3-RAG.
-- Tulu3-SFT Train Data: [download](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing). You can use it to train the Tulu3-FT model.
+We have completed the data processing procedure, and below is the processed data. You can directly use it to train the model.
+
+
+- **Tulu3-Block-FT**/**Tulu3-Rag** Train Data: [download](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing). You can use it to train the two models, Tulu3-Block-FT and Tulu3-RAG.
+- **Tulu3-SFT** Train Data: [download](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing). You can use it to train the Tulu3-FT model.
 
 Each line is a training example, and the data format is as follows:
 
@@ -46,6 +49,8 @@ class SFTInstanceWithChunks(TypedDict):
 
 ## DataProcess
 
+You can also follow the process below to reprocess the data. Our data is primarily divided into two main parts: **Tulu3** and **RAG**. Below is the processing workflow.
+
 ### Tulu3 Dataset
 
 #### Data Downloading
@@ -66,8 +71,7 @@ git lfs install
 git clone https://huggingface.co/datasets/allenai/tulu-3-sft-mixture
 
 mv tulu-3-sft-mixture tulu3
-mv tulu3/data/* tulu3/
-rm -r tulu3/data tulu3/hf
+mv tulu3/data tulu3/hf
 
 python3 data_process/tulu3/step0_split.py 
 python3 data_process/tulu3/step1_run.py 
@@ -135,7 +139,7 @@ cd hqa
 wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 ```
 
-### Data Pre-Processing
+#### Data Pre-Processing
 
 1. There is no need to pre-process `2WikiMultiHop` and `HQA. `hotpot_dev_distractor_v1.json` of `HQA` is used for
    following pre-processing steps.
@@ -144,7 +148,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 3. The `DPR` repository provides Golden Documents (i.e., paragraph snippets that can answer questions) for the `NQ`
    dataset, which are not actually used and can be ignored.
 
-### Construct Train and Test Set
+#### Construct Train and Test Set
 
 1. Download retrieval model: [facebook/contriever-msmacro](https://huggingface.co/facebook/contriever-msmarco)
 2. Execute following commands for pre-processing
@@ -221,8 +225,13 @@ python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.
 
 ## Running
 
-1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
-   And you need to define the following environment variables in the file:
+Under the `train_scripts/` folder, we have provided three training scripts that can be used to train the following models:
+
+1. **Tulu3-SFT**: `train_scripts/tulu3_sft.sh`, which serves as the base model for the two models below.
+2. **Tulu3-RAG**: `train_scripts/tulu3_rag.sh`
+3. **Tulu3-Block-FT**: `train_scripts/tulu3_block_ft.sh`
+
+And you need to define the following environment variables in the file:
 
 - `PROJECT_DIR`: Absolute path of the `Block-Attention` project
 - `TRAIN_FP`: Training data file, for example `datahub/rag/block.train`
