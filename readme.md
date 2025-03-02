@@ -256,13 +256,13 @@ python3 block_generate.py --model_name <the path of block model> --input_file <a
 
 ### 📈 Evaluation
 
-1. Evaluate RAG benchmarks
+1. Evaluation on RAG benchmarks
 
    Use `eval.py` to conduct the evaluation:
    ```bash
    python3 eval.py --input <the path of file containing evaluation results>
    ```
-3. Evaluate on ICL and general benchmarks
+3. Evaluation on ICL and general benchmarks
 
    We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct evaluations on ICL and general domains.
 
