@@ -4,13 +4,13 @@ DS_CONFIG="configs/ds_stage2.json"
 
 MODEL_NAME="/root/hubs/meta-llama/Llama-3.1-8B"
 
-TRAIN_FP=""
+TRAIN_FP="datahub/tulu3/sft.train"
+# You can create a test set by yourself.
 EVAL_FP=""
 
 LEARNING_RATE=5e-6
 
-SAVE_DIR="datahub/tulu3/sft.train"
-# You can create a test set by yourself.
+SAVE_DIR=""
 RUN_NAME=""
 
 mkdir -p $SAVE_DIR

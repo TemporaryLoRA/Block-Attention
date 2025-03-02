@@ -13,7 +13,7 @@ from tqdm import tqdm
 from transformers import PreTrainedTokenizer
 
 from data_process.tulu3.preprocess_block import process_tulu_instance
-from src.data.tools import process_messages
+from src.data.tools import process_messages, process_blocks
 
 SFTInputs = TypedDict("SFTInputs", {
     "input_ids": List[int],
@@ -22,8 +22,7 @@ SFTInputs = TypedDict("SFTInputs", {
 
 SFTInstance = TypedDict("SFTInstance", {
     "inputs": SFTInputs,
-    # `chunks` NotRequired
-    "chunks": List[str],
+    "blocks": List[str],
     "block_inputs": SFTInputs,
     "block_tokens": List[int],
     "response_tokens": int,
@@ -161,7 +160,7 @@ class SFTBlockDataset(Dataset):
         self.dataset.raw_dataset = []
 
         for i, ins in tqdm(enumerate(dataset), desc=f"Preparing: ", total=len(dataset)):
-            ins: SFTInstance
+            ins: SFTInstance = process_blocks(ins=ins, tokenizer=self.tokenizer)
 
             if len(ins["inputs"]["input_ids"]) > self.max_length:
                 continue

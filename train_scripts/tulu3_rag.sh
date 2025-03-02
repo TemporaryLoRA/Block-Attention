@@ -1,5 +1,5 @@
 export TOKENIZERS_PARALLELISM="false"
-export WANDB_PROJECT="T-Block-Tulu3"
+export WANDB_PROJECT="Block-Attention"
 DS_CONFIG="configs/ds_stage2.json"
 
 

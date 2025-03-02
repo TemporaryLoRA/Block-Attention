@@ -14,15 +14,24 @@
 
 Implementation of paper [Block-Attention for Efficient Prefilling](https://arxiv.org/abs/2409.15355).
 
-We introduce Block-attention, an attention mechanism designed to address the increased inference latency and cost in Retrieval-Augmented Generation (RAG) scenarios. 
+We introduce Block-attention, an attention mechanism designed to address the increased inference latency and cost in
+Retrieval-Augmented Generation (RAG) scenarios.
 Traditional approaches often encode the entire context in an auto-regressive manner.
-Instead, Block-attention divides retrieved documents into discrete blocks, with each block independently calculating key-value (KV) states except for the final block.
-In RAG scenarios, by defining each passage as a block, Block-attention enables us to reuse the KV states of passages that have been seen before, thereby significantly reducing the latency and the computation overhead during inference.
-The implementation of Block-attention involves block segmentation, position re-encoding, and fine-tuning the LLM to adapt to the Block-attention mechanism. 
-Experiments on 11 diverse benchmarks, including RAG, ICL, and general domains, demonstrate that after block fine-tuning, the Block-attention model not only achieves performance comparable to that of full-attention models, but can also seamlessly switch between the block and full attention modes without any performance loss.
-Notably, Block-attention significantly reduces the time to first token (TTFT) and floating point operations (FLOPs) to a very low level. It only takes 45 ms to output the first token for an input sequence with a total length of 32K. Compared to the full-attention models, the TTFT and corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively. 
+Instead, Block-attention divides retrieved documents into discrete blocks, with each block independently calculating
+key-value (KV) states except for the final block.
+In RAG scenarios, by defining each passage as a block, Block-attention enables us to reuse the KV states of passages
+that have been seen before, thereby significantly reducing the latency and the computation overhead during inference.
+The implementation of Block-attention involves block segmentation, position re-encoding, and fine-tuning the LLM to
+adapt to the Block-attention mechanism.
+Experiments on 11 diverse benchmarks, including RAG, ICL, and general domains, demonstrate that after block fine-tuning,
+the Block-attention model not only achieves performance comparable to that of full-attention models, but can also
+seamlessly switch between the block and full attention modes without any performance loss.
+Notably, Block-attention significantly reduces the time to first token (TTFT) and floating point operations (FLOPs) to a
+very low level. It only takes 45 ms to output the first token for an input sequence with a total length of 32K. Compared
+to the full-attention models, the TTFT and corresponding FLOPs are reduced by 98.7\% and 99.8\%, respectively.
 
-Additionally, we also elaborate on how Block-attention is applied in Game AI scenario and the substantial potential benefits it entails. We strongly suggest researchers in the gaming field not to overlook our work.
+Additionally, we also elaborate on how Block-attention is applied in Game AI scenario and the substantial potential
+benefits it entails. We strongly suggest researchers in the gaming field not to overlook our work.
 
 ![Illustration of Block-Attention](./figs/overview.png)
 
@@ -34,37 +43,38 @@ Additionally, we also elaborate on how Block-attention is applied in Game AI sce
 ## 📋 Table of Contents
 
 - [Block-Attention For Efficient Prefilling](#block-attention-for-efficient-prefilling)
-  - [🔥 News](#-news)
-  - [📋 Table of Contents](#-table-of-contents)
-  - [🤗 Resources](#-resources)
-  - [🚀 Getting Started](#-getting-started)
-    - [🔧 Data Process](#-data-process)
-    - [⚙️ Fine-tuning](#️-fine-tuning-models)
-    - [♻️ Inference](#️-inference)
-    - [📈 Evaluation](#-evaluation)
-  - [📎 Citation](#-citation)
+    - [🔥 News](#-news)
+    - [📋 Table of Contents](#-table-of-contents)
+    - [🤗 Resources](#-resources)
+    - [🚀 Getting Started](#-getting-started)
+        - [🔧 Data Process](#-data-process)
+        - [⚙️ Fine-tuning](#️-fine-tuning-models)
+        - [♻️ Inference](#️-inference)
+        - [📈 Evaluation](#-evaluation)
+    - [📎 Citation](#-citation)
 
 ## 🤗 Resources
 
-| Item                                    | Repository                                                                                     |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Tulu3-SFT Train Dataseet                | [💾 Google Drive](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing)|
+| Item                                   | Repository                                                                                     |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Tulu3-SFT Train Dataset                | [💾 Google Drive](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing)|
 | Tulu3-Block-FT / Tulu3-Block-Rag Train Dataset | [💾 Google Drive](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing) |
-| Tulu3-sft-mixture Dataset               | [🤗 allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)    |
+| Tulu3-sft-mixture Dataset              | [🤗 allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)    |
 | Tulu3-Block-FT Model | [🤗 ldsjmdy/Tulu3-Block-FT](https://huggingface.co/ldsjmdy/Tulu3-Block-FT) |
 | Tulu3-SFT Model (Baseline) | [🤗 ldsjmdy/Tulu3-SFT](https://huggingface.co/ldsjmdy/Tulu3-SFT) |
 | Tulu3-RAG Model (Baseline) | [🤗 ldsjmdy/Tulu3-RAG](https://huggingface.co/ldsjmdy/Tulu3-RAG) |
 
-
 ## 🚀 Getting Started
 
-Although we provided the processed dataset in [🤗 Resources](#-resources), we still release our scripts for processing the raw data as below
+Although we provided the processed dataset in [🤗 Resources](#-resources), we still release our scripts for processing
+the raw data as below
 
 ---
 
 ### 🔧 Data Process
 
 #### 1. Tulu-3 Dataset Process
+
 **Note**: running following commands to prepare the Tulu-3 training dataset.
 
 ```bash 
@@ -178,76 +188,109 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 3. Construct Train Set
 
    After completing the test data projection for each dataset in step 1, additional processing is still required.
-   
-   1. Execute `data_process/rag/step0_random_sample.py` to randomly sample 20,000 data points from the training data of
-      `2wiki`
-      and `tqa` to create their respective training sets.
-   
-      ```bash
-      python3 data_process/rag/step0_random_sample.py --input datahub/rag/2wiki_train/dataset --output datahub/rag/2wiki_train/dataset_p20k --num_samples 20000
-      python3 data_process/rag/step0_random_sample.py --input cache/tqa_train/dataset --output datahub/rag/tqa_train/dataset_p20k --num_samples 20000
-      ```
-   
-   2. Execute `data_process/rag/step1_merge.py` to combine the two training files obtained in step 1, resulting in the
-      final
-      training dataset.
-   
-      ```bash 
-      python3 data_process/rag/step1_merge.py --inputs "datahub/rag/2wiki_train/dataset_p20k datahub.rag/tqa_train/dataset_p20k" --output datahub/rag/tqa_2wiki_p20k
-      ```
-   
-   3. Complete the `generated` field for training purposes. We have already prepared the processed data, which can be found in [🤗 Resources](#-resources).
-   
-      ```python
-      from typing import TypedDict, List
-      
-      Document = TypedDict("Document", {"title": str, "text": str, "score": float})
-      
-      SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
-          "input_ids": List[int],
-          "labels": List[int]
-      })
-      
-      SFTDataInstance = TypedDict("SFTDataInstance", {
-          "prompt": str,
-          "question": str,
-          "answers": List[str],
-          "generated": str,
-          "inputs": SFTDataInstanceInputs,
-          "documents": List[Document]
-      })
-      ```
-   
-   4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
-   
-      ```bash 
-      python3 data_process/rag/step2_to_tulu_format.py --input datahub/rag/tqa_2wiki_p20k --output datahub/rag/rag.train
-      ```
-   
-   5. Mix tulu3 data and rag data
-      
-      Mix the data of tulu3 and rag to obtain the final block-attention training data.
-      
-      ```bash 
-      python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.train --rag_input datahub/rag/rag.train --output datahub/mix_tulu3_rag.train
-      ```
+
+    1. Execute `data_process/rag/step0_random_sample.py` to randomly sample 20,000 data points from the training data of
+       `2wiki`
+       and `tqa` to create their respective training sets.
+
+       ```bash
+       python3 data_process/rag/step0_random_sample.py --input datahub/rag/2wiki_train/dataset --output datahub/rag/2wiki_train/dataset_p20k --num_samples 20000
+       python3 data_process/rag/step0_random_sample.py --input cache/tqa_train/dataset --output datahub/rag/tqa_train/dataset_p20k --num_samples 20000
+       ```
+
+    2. Execute `data_process/rag/step1_merge.py` to combine the two training files obtained in step 1, resulting in the
+       final
+       training dataset.
+
+       ```bash 
+       python3 data_process/rag/step1_merge.py --inputs "datahub/rag/2wiki_train/dataset_p20k datahub.rag/tqa_train/dataset_p20k" --output datahub/rag/tqa_2wiki_p20k
+       ```
+
+    3. Complete the `generated` field for training purposes. We have already prepared the processed data, which can be
+       found in [🤗 Resources](#-resources).
+
+       ```python
+       from typing import TypedDict, List
+       
+       Document = TypedDict("Document", {"title": str, "text": str, "score": float})
+       
+       SFTDataInstanceInputs = TypedDict("SFTDataInstanceInputs", {
+           "input_ids": List[int],
+           "labels": List[int]
+       })
+       
+       SFTDataInstance = TypedDict("SFTDataInstance", {
+           "prompt": str,
+           "question": str,
+           "answers": List[str],
+           "generated": str,
+           "inputs": SFTDataInstanceInputs,
+           "documents": List[Document]
+       })
+       ```
+
+    4. Convert the data structure of RAG into the data structure of Tulu3 to facilitate training.
+
+       ```bash 
+       python3 data_process/rag/step2_to_tulu_format.py --input datahub/rag/tqa_2wiki_p20k --output datahub/rag/rag.train
+       ```
+
+    5. Mix tulu3 data and rag data
+
+       Mix the data of tulu3 and rag to obtain the final block-attention training data.
+
+       ```bash 
+       python3 data_process/stepx_merge_tulu3_rag.py --tulu3_input datahub/tulu3/block.train --rag_input datahub/rag/rag.train --output datahub/mix_tulu3_rag.train
+       ```
 
 ### ⚙️ Fine-tuning Models
 
-Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
-   And you need to define the following environment variables in the file:
+Use the `tulu3_block_ft.sh`, `tulu3_rag.sh`, and `tulu3_sft.sh` scripts located in the `train_scripts` folder, along with the provided dataset files ([Tulu3-SFT Train Dataset](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing), [Tulu3-Block-FT / Tulu3-Block-Rag Train Dataset](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing)), to replicate the models mentioned in our paper.
 
-- `PROJECT_DIR`: Absolute path of the `Block-Attention` project
-- `TRAIN_FP`: Training data file, for example `datahub/rag/block.train`
-- `EVAL_FP`: Test data file, with the same format as `TRAIN_FP`
-- `SAVE_DIR`: Model saving path
+When running the training scripts, you need to define the following variables:
+
+- `TRAIN_FP`
+- `EVAL_FP`
+- `SAVE_DIR`
+- `RUN_NAME`: for wandb
+
+You can use your own data (the file should be in jsonline format) for training. Each line of data can follow one of the two formats below:
+
+1. `{"messages": [{"role": "system" or "user" or "assistant", "content": str}, ...]}`
+
+In this format, we will use the chunking method mentioned in the paper to split the `messages` into blocks using the following delimiters: `\n\n`, `---`, `===`, `\n\t`, `\n`. For more details, please refer to the `src.data.tools.process_messages` function. You can also modify the `split_by_delimiter` and `merge_message_blocks` functions to create a chunking strategy that better suits your task.
+
+2. `{"prompt": str, "blocks": List[str], "response": str}`
+
+You can also provide a pre-chunked dataset, where `blocks` represents the result of chunking the `prompt`. In this case, `blocks[-1]` will have global attention, while `blocks[:-1]` will only have local attention.
 
 ### ♻️ Inference
 
-1. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
+By using `block_generate_server.py`, you can start a Flask server. You can obtain the generation results to the `Block-Attention` method as follows:
 
-```bash
-python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
+```bash 
+CUDA_VISIBLE_DEVICES=0 python3 block_generate_server.py --model <model_nme> --port <port> --dtype bfloat16
+```
+
+```python
+import json
+import requests
+
+blocks = [
+    "<|user|>\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's question.\n\n",
+    "- Title: Polish-Russian War (film)\nPolish-Russian War(Wojna polsko-ruska) is a 2009 Polish film directed by Xawery \u017bu\u0142awski based on the novel Polish-Russian War under the white-red flag by Dorota Mas\u0142owska.\n",
+    "- Title: Xawery \u017bu\u0142awski\nXawery \u017bu\u0142awski (born 22 December 1971 in Warsaw) is a Polish film director.In 1995 he graduated National Film School in \u0141\u00f3d\u017a.He is the son of actress Ma\u0142gorzata Braunek and director Andrzej \u017bu\u0142awski.His second feature \"Wojna polsko-ruska\" (2009), adapted from the controversial best-selling novel by Dorota Mas\u0142owska, won First Prize in the New Polish Films competition at the 9th Era New Horizons Film Festival in Wroc\u0142aw.In 2013, he stated he intends to direct a Polish novel \"Z\u0142y\" by Leopold Tyrmand.\u017bu\u0142awski and his wife Maria Strzelecka had 2 children together:son Kaj \u017bu\u0142awski (born 2002) and daughter Jagna \u017bu\u0142awska (born 2009).\n",
+    "- Title: Viktor Yeliseyev\nViktor Petrovich Yeliseyev( born June 9, 1950) is a Russian general, orchestra conductor and music teacher.He is the director of the Ministry of the Interior Ensemble, one of the two Russian Red Army Choirs.\n- Title: Minamoto no Chikako\nShe was the mother of Prince Morinaga.\n- Title: Alice Washburn\nAlice Washburn( 1860- 1929) was an American stage and film actress.She worked at the Edison, Vitagraph and Kalem studios.Her final film Snow White was her only known feature film.She died of heart attack in November 1929.\n",
+    "Please write a high-quality answer for the given question using only the provided search documents (some of which might be irrelevant).\nQuestion: Who is the mother of the director of film Polish-Russian War (Film)?\n<|assistant|>\n"
+]
+
+r = requests.post(
+    url="<server url>",
+    data=json.dumps({"blocks": blocks}),
+    headers={"Content-Type": "application/json"}
+)
+
+print(r.json()["generated"])
 ```
 
 ### 📈 Evaluation
@@ -260,7 +303,8 @@ python3 block_generate.py --model_name <the path of block model> --input_file <a
    ```
 3. Evaluation on ICL and general benchmarks
 
-   We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct evaluations on ICL and general domains.
+   We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct evaluations on ICL and general
+   domains.
 
 ## 📎 Citation
 

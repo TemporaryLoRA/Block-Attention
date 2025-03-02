@@ -118,72 +118,23 @@ def merge_and_rotary_past_key_values(pkvs: List[DynamicCache], emb: LlamaRotaryE
     return cache
 
 
-def make_rag_blocks(prompt: str) -> Tuple[List[str], str]:
-    blocks: List[str] = [
-        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nYou are an intelligent AI assistant. Please answer questions based on the user's instructions. Below are some reference documents that may help you in answering the user's question.\n\n"
-    ]
-    assert prompt.startswith(blocks[0]), json.dumps({
-        "prompt": prompt, "blocks": blocks[0]}, ensure_ascii=False, indent=4
-    )
-    content = prompt[len(blocks[0]):]
-
-    pos = content.find("<|eot_id|>") + len("<|eot_id|>")
-    documents = content[:pos]
-    instruction_and_response = content[pos:]
-
-    pos = documents.find("\n- Title:")
-    while pos != -1:
-        doc = documents[:pos + 1]
-        blocks.append(doc)
-        documents = documents[pos + 1:]
-        pos = documents.find("\n- Title:")
-    assert documents.startswith("- Title:") and documents.endswith("<|eot_id|>"), documents
-    blocks.append(documents[:-len("<|eot_id|>")])
-    instruction_and_response = "<|eot_id|>" + instruction_and_response
-
-    assert instruction_and_response.startswith(
-        "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n"
-        "Please write a high-quality answer for the given question using only the provided search documents"
-    )
-    blocks = [b for b in blocks if b != ""]
-
-    assert "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n" in blocks[0], blocks[0]
-    blocks[0] = blocks[0].replace(
-        "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n",
-        "<|user|>\n"
-    )
-    assert "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n" in instruction_and_response, instruction_and_response
-    instruction_and_response = instruction_and_response.replace(
-        "<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n", "\n\n"
-    )
-    assert "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n" in instruction_and_response, instruction_and_response
-    instruction_and_response = instruction_and_response.replace(
-        "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n", "\n<|assistant|>\n"
-    )
-    return blocks, instruction_and_response
-
-
 @torch.no_grad()
 def build_block_past_key_values(
-        prompt: str, tokenizer: PreTrainedTokenizer, model: LlamaForCausalLM, emb: LlamaRotaryEmbedding,
-        num_local_attention_blocks: int, task_type: str = "rag", task: Optional[str] = None
+        blocks: List[str], instruction: str, tokenizer: PreTrainedTokenizer, model: LlamaForCausalLM,
+        emb: LlamaRotaryEmbedding, num_local_attention_blocks: int
 ) -> Tuple[Optional[List[DynamicCache]], torch.Tensor]:
-    if task_type == "rag":
-        blocks, instruction_and_response = make_rag_blocks(prompt=prompt)
-    else:
-        assert False
-
     if len(blocks) > num_local_attention_blocks:
-        instruction_and_response = "".join(blocks[num_local_attention_blocks:]) + instruction_and_response
+        instruction = "".join(blocks[num_local_attention_blocks:]) + instruction
         blocks = blocks[:num_local_attention_blocks]
+
     if num_local_attention_blocks == 0:
-        instruction_and_response = "".join(blocks) + instruction_and_response
+        instruction = "".join(blocks) + instruction
         blocks = []
 
     print(f"Prompt | num local attention blocks: {num_local_attention_blocks}\n")
     print(json.dumps({
         "blocks": blocks,
-        "instruction_ans_response": instruction_and_response,
+        "instruction_ans_response": instruction,
     }, ensure_ascii=False, indent=4))
 
     caches: List[DynamicCache] = []
@@ -195,8 +146,7 @@ def build_block_past_key_values(
             device=model.device
         )
         if b_idx == 0:
-            # input_ids = block_attention_special_token + block_input_ids
-            input_ids = torch.cat(tensors=[block_attention_special_token, block_input_ids], dim=-1)
+            input_ids = block_input_ids
         else:
             input_ids = torch.cat(tensors=[input_ids, block_input_ids], dim=-1)
 
@@ -207,7 +157,7 @@ def build_block_past_key_values(
         caches.append(pkv)
 
     response_input_ids = torch.tensor(
-        data=[tokenizer.encode(instruction_and_response, add_special_tokens=False)],
+        data=[tokenizer.encode(instruction, add_special_tokens=False)],
         dtype=torch.int64,
         device=model.device
     )
@@ -219,12 +169,12 @@ def build_block_past_key_values(
 
 @torch.no_grad()
 def block_generate(
-        prompt: str, generation_config: GenerationConfig, model: LlamaForCausalLM, emb: LlamaRotaryEmbedding,
-        tokenizer: PreTrainedTokenizer, num_local_attention_blocks: int, task_type: str, task: str
+        blocks: List[str], instruction: str, generation_config: GenerationConfig, model: LlamaForCausalLM,
+        emb: LlamaRotaryEmbedding, tokenizer: PreTrainedTokenizer, num_local_attention_blocks: int, task_type: str
 ) -> str:
     past_key_values, input_ids = build_block_past_key_values(
-        prompt=prompt, tokenizer=tokenizer, model=model, emb=emb, num_local_attention_blocks=num_local_attention_blocks,
-        task_type=task_type, task=task
+        blocks=blocks, instruction=instruction, tokenizer=tokenizer, model=model, emb=emb,
+        num_local_attention_blocks=num_local_attention_blocks,
     )
     if past_key_values is not None:
         past_key_values = merge_and_rotary_past_key_values(pkvs=past_key_values, emb=emb)
@@ -241,14 +191,13 @@ def block_generate(
 def _block_generate():
     form = request.get_json()
     generated = block_generate(
-        prompt=form["prompt"],
+        blocks=form["blocks"][:-1],
+        instruction=form["blocks"][-1],
         generation_config=generation_config,
         model=model,
         emb=emb,
         tokenizer=tokenizer,
-        num_local_attention_blocks=form["num_local_attention_blocks"],
-        task_type=form.get("task_type", "rag"),
-        task=form.get("task")
+        num_local_attention_blocks=form.get("num_local_attention_blocks", 10000),
     )
     print("generated: ", generated)
     return {"ret": 0, "generated": generated, "message": ""}
