@@ -8,7 +8,7 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2411.16365v3-b31b1b.svg)](https://arxiv.org/abs/2409.15355)
 [![hf](https://img.shields.io/badge/🤗-Hugging%20Face-blue.svg)](https://huggingface.co/ldsjmdy)
-[![GitHub stars](https://img.shields.io/github/stars/maziao/M2RAG.svg?colorA=orange&colorB=orange&logo=github)](https://github.com/TemporaryLoRA/Block-Attention)
+[![GitHub stars](https://img.shields.io/github/stars/TemporaryLoRA/Block-Attention.svg?colorA=orange&colorB=orange&logo=github)](https://github.com/TemporaryLoRA/Block-Attention)
 
 </h5>
 
