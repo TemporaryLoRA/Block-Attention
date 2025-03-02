@@ -308,13 +308,12 @@ print(r.json()["generated"])
 If you find this repository useful for your research, please cite our paper:
 
 ```bibtex
-@misc{sun2024blockattentionefficientrag,
-      title={Block-Attention for Efficient RAG}, 
-      author={East Sun and Yan Wang and Lan Tian},
-      year={2024},
-      eprint={2409.15355},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2409.15355}, 
+@inproceedings{
+ma2025blockattention,
+title={Block-Attention for Efficient Prefilling},
+author={Dongyang Ma and Yan Wang and Tian Lan},
+booktitle={The Thirteenth International Conference on Learning Representations},
+year={2025},
+url={https://openreview.net/forum?id=7zNYY1E2fq}
 }
 ```
