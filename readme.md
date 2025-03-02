@@ -238,7 +238,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 
 ### ⚙️ Fine-tuning Models
 
-1. Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
+Use `train_scripts/block_llama3.sh` to train the `meta-llama/Meta-Llama-3-8B` model in the `Block-Attention` mode.
    And you need to define the following environment variables in the file:
 
 - `PROJECT_DIR`: Absolute path of the `Block-Attention` project
@@ -248,7 +248,7 @@ wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
 
 ### ♻️ Inference
 
-1. Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
+Use `block_generate.py` to obtain the generated results according to the `Block-Attention` method.
 
 ```bash
 python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
@@ -256,19 +256,26 @@ python3 block_generate.py --model_name <the path of block model> --input_file <a
 
 ### 📈 Evaluation with OpenCompass
 
-We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct our evaluations on general and RAG benchmarks.
+1. Evaluate RAG results
+   Use `eval.py` to conduct the evaluation:
+   ```bash
+   python3 eval.py --input <the path of file containing evaluation results>
+   ```
+3. Evaluate general benchmarks
+   We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct our evaluations on general and RAG benchmarks.
 
 ## 📎 Citation
 
 If you find this repository useful for your research, please cite our paper:
 
 ```bibtex
-@inproceedings{
-ma2025blockattention,
-title={Block-Attention for Efficient {RAG}},
-author={Dongyang Ma and Yan Wang and Tian Lan},
-booktitle={The Thirteenth International Conference on Learning Representations},
-year={2025},
-url={https://openreview.net/forum?id=7zNYY1E2fq}
+@misc{sun2024blockattentionefficientrag,
+      title={Block-Attention for Efficient RAG}, 
+      author={East Sun and Yan Wang and Lan Tian},
+      year={2024},
+      eprint={2409.15355},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2409.15355}, 
 }
 ```
