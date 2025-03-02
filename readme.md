@@ -41,7 +41,7 @@ Additionally, we also elaborate on how Block-attention is applied in Game AI sce
     - [🔧 Data Process](#-data-process)
     - [⚙️ Fine-tuning](#️-fine-tuning-models)
     - [♻️ Inference](#️-inference)
-    - [📈 Evaluation with OpenCompass](#️-evaluation-with-opencompass)
+    - [📈 Evaluation](#️-evaluation)
   - [📎 Citation](#-citation)
 
 ## 🤗 Resources
@@ -254,7 +254,7 @@ Use `block_generate.py` to obtain the generated results according to the `Block-
 python3 block_generate.py --model_name <the path of block model> --input_file <a jsonline file and each line of JSON has "prompt" field, such as "cache/hqa_eval/dataset">
 ```
 
-### 📈 Evaluation with OpenCompass
+### 📈 Evaluation
 
 1. Evaluate RAG results
    Use `eval.py` to conduct the evaluation:
