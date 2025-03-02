@@ -7,7 +7,7 @@
 <h5 align=center>
 
 [![arXiv](https://img.shields.io/badge/arXiv-2411.16365v3-b31b1b.svg)](https://arxiv.org/abs/2409.15355)
-[![hf](https://img.shields.io/badge/🤗-Hugging%20Face-blue.svg)](https://huggingface.co/ldsjmdy)
+[![hf](https://img.shields.io/badge/🤗-Hugging%20Face-blue.svg)](https://huggingface.co/collections/ldsjmdy/block-attention-67c1b8def55c70c3eb23bbea)
 [![GitHub stars](https://img.shields.io/github/stars/TemporaryLoRA/Block-Attention.svg?colorA=orange&colorB=orange&logo=github)](https://github.com/TemporaryLoRA/Block-Attention)
 
 </h5>
@@ -55,14 +55,11 @@ benefits it entails. We strongly suggest researchers in the gaming field not to 
 
 ## 🤗 Resources
 
-| Item                                   | Repository                                                                                     |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Tulu3-SFT Train Dataset                | [💾 Google Drive](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing)|
-| Tulu3-Block-FT / Tulu3-Block-Rag Train Dataset | [💾 Google Drive](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing) |
-| Tulu3-sft-mixture Dataset              | [🤗 allenai/tulu-3-sft-mixture](https://huggingface.co/datasets/allenai/tulu-3-sft-mixture)    |
-| Tulu3-Block-FT Model | [🤗 ldsjmdy/Tulu3-Block-FT](https://huggingface.co/ldsjmdy/Tulu3-Block-FT) |
-| Tulu3-SFT Model (Baseline) | [🤗 ldsjmdy/Tulu3-SFT](https://huggingface.co/ldsjmdy/Tulu3-SFT) |
-| Tulu3-RAG Model (Baseline) | [🤗 ldsjmdy/Tulu3-RAG](https://huggingface.co/ldsjmdy/Tulu3-RAG) |
+| Item                                   | Repository | Train Data |
+| - | - | - |
+| Tulu3-Block-FT Model | [🤗 ldsjmdy/Tulu3-Block-FT](https://huggingface.co/ldsjmdy/Tulu3-Block-FT) | [💾 Google Drive](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing) |
+| Tulu3-SFT Model (Baseline) | [🤗 ldsjmdy/Tulu3-SFT](https://huggingface.co/ldsjmdy/Tulu3-SFT) | [💾 Google Drive](https://drive.google.com/file/d/1hqKcQ3Qbc88WNVlxCfc-illfChc2Hzty/view?usp=sharing) |
+| Tulu3-RAG Model (Baseline) | [🤗 ldsjmdy/Tulu3-RAG](https://huggingface.co/ldsjmdy/Tulu3-RAG) | [💾 Google Drive](https://drive.google.com/file/d/17kldAR2CIQPiNJ6ASW9et_GN_wqjFqfv/view?usp=sharing) | 
 
 ## 🚀 Getting Started
 
