@@ -63,7 +63,7 @@ benefits it entails. We strongly suggest researchers in the gaming field not to 
 
 ## 🚀 Getting Started
 
-Although we provided the processed dataset in [🤗 Resources](#-resources), we still release our scripts for processing
+Although we provided the processed dataset in [🤗 Huggingface](https://huggingface.co/collections/ldsjmdy/block-attention-67c1b8def55c70c3eb23bbea), we still release our scripts for processing
 the raw data as below
 
 ---
