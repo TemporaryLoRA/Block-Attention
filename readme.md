@@ -37,7 +37,7 @@ benefits it entails. We strongly suggest researchers in the gaming field not to 
 
 ## 🔥 News
 
-- **2025 March 1:** Code, datasets and model weights are released.
+- **2025 March 1:** Code, datasets and model weights are released at [🤗 Huggingface](https://huggingface.co/collections/ldsjmdy/block-attention-67c1b8def55c70c3eb23bbea).
 - **2024 Sep 15:** Paper available on [arXiv](https://arxiv.org/abs/2409.15355).
 
 ## 📋 Table of Contents
@@ -63,7 +63,7 @@ benefits it entails. We strongly suggest researchers in the gaming field not to 
 
 ## 🚀 Getting Started
 
-Although we provided the processed dataset in [🤗 Huggingface](https://huggingface.co/collections/ldsjmdy/block-attention-67c1b8def55c70c3eb23bbea), we still release our scripts for processing
+Although we release our processed dataset, we still release our scripts for processing
 the raw data as below
 
 ---
