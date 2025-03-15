@@ -301,7 +301,7 @@ print(r.json()["generated"])
 3. Evaluation on ICL and general benchmarks
 
    We leverage [OpenCompass](https://github.com/open-compass/opencompass) to conduct evaluations on ICL and general
-   domains.
+   domains. Please refer to [./evaluate_oc/README](./evaluate_oc/README.md) for more details.
 
 ## 📎 Citation
 
