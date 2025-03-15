@@ -60,7 +60,7 @@ This is the tutorial for conducting the evaluation on the opencompass, consistin
     ```
     where `doc` contains the raw data of this example and `doc_id` contains its index.
     `label` saves the ground-truth answer.
-    ``request` contains the prompt and generation hyper-parameters for LLM's inference.
+    `request` contains the prompt and generation hyper-parameters for LLM's inference.
 
 ## 2. Inference LLMs on the processed data
 
