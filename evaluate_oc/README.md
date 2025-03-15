@@ -96,7 +96,7 @@ This is the tutorial for conducting the evaluation on the opencompass, consistin
     * `opencompass/configs/models/hf_internlm/tulu.py`
     * `opencompass/opencompass/configs/models/hf_internlm/tulu.py`
 
-    In opencompass, the evaluated models are detected be the `abbr` key.
+    In opencompass, the evaluated models are detected by the `abbr` key.
 
     ```python
     from opencompass.models import HuggingFacewithChatTemplate
