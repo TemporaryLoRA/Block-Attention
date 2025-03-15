@@ -213,7 +213,6 @@ class Args:
 if __name__ == '__main__':
     args: Args = fire.Fire(component=Args)
     tokenizer = AutoTokenizer.from_pretrained(
-        # pretrained_model_name_or_path="/root/llm_trainer/checkpoints/tulu3/llama31-8B_bs-128_5e-6_ce-sum/checkpoint-16274",
         pretrained_model_name_or_path=args.model,
         use_fast=False
     )

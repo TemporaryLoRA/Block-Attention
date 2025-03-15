@@ -263,10 +263,10 @@ You can also provide a pre-chunked dataset, where `blocks` represents the result
 
 ### ♻️ Inference
 
-By using `block_generate_server.py`, you can start a Flask server. You can obtain the generation results to the `Block-Attention` method as follows:
+By using `server/block_generate_server.py`, you can start a Flask server. You can obtain the generation results to the `Block-Attention` method as follows:
 
 ```bash 
-CUDA_VISIBLE_DEVICES=0 python3 block_generate_server.py --model <model_nme> --port <port> --dtype bfloat16
+CUDA_VISIBLE_DEVICES=0 python3 server/block_generate_server.py --model <model_nme> --port <port> --dtype bfloat16
 ```
 
 ```python
@@ -309,11 +309,11 @@ If you find this repository useful for your research, please cite our paper:
 
 ```bibtex
 @inproceedings{
-ma2025blockattention,
-title={Block-Attention for Efficient Prefilling},
-author={Dongyang Ma and Yan Wang and Tian Lan},
-booktitle={The Thirteenth International Conference on Learning Representations},
-year={2025},
-url={https://openreview.net/forum?id=7zNYY1E2fq}
+    ma2025blockattention,
+    title={Block-Attention for Efficient Prefilling},
+    author={Dongyang Ma and Yan Wang and Tian Lan},
+    booktitle={The Thirteenth International Conference on Learning Representations},
+    year={2025},
+    url={https://openreview.net/forum?id=7zNYY1E2fq}
 }
 ```

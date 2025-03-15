@@ -409,7 +409,6 @@ if __name__ == "__main__":
     for item in datasets:
         config_map[item['abbr']] = item
 
-    #data_root_path = '/home/lt/NewPoNe/eval/OC_ready_for_push/oc_data'
     data_root_path = 'Please write down your OpenCompassData-Core folder path'
     data_output_path = 'data'
     mapping = {
